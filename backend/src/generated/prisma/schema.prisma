@@ -1,0 +1,152 @@
+generator client {
+  provider      = "prisma-client-js"
+  output        = "../src/generated/prisma"
+  binaryTargets = ["native", "debian-openssl-1.1.x"]
+}
+
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+// Enums defined below are handled as Strings
+// Role: ADMIN, STAFF
+// PolicyType: LIFE, HEALTH, VEHICLE, OTHER_GEN
+// RenewalStatus: NEW, CALLED, INTERESTED, PAYMENT_PENDING, RENEWED, LOST
+
+model User {
+  id        String   @id @default(uuid())
+  email     String   @unique
+  password  String
+  name      String
+  role      String   @default("STAFF")
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  activities Activity[]
+  auditLogs  AuditLog[]
+}
+
+model Client {
+  id        String   @id @default(uuid())
+  email     String?  @unique
+  mobile    String?  @unique
+  name      String
+  kycStatus String?
+  notes     String?  @db.Text
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  policies  Policy[]
+  documents Document[]
+}
+
+model Policy {
+  id                 String    @id @default(uuid())
+  policyNo           String
+  clientId           String
+  client             Client    @relation(fields: [clientId], references: [id], onDelete: Cascade)
+  type               String
+  insurer            String
+  premium            Float
+  premiumPaid        Float?    @default(0)
+  paymentStatus      String?   @default("UNPAID")
+  premiumMode        String? // ANNUAL, MONTHLY, QUARTERLY, HALF_YEARLY, CUSTOM_DAYS
+  startDate          DateTime
+  expiryDate         DateTime
+  status             String    @default("ACTIVE")
+  attachments        String?   @db.Text
+  tenureType         String? // MONTHLY, QUARTERLY, HALF_YEARLY, YEARLY, CUSTOM
+  tenureMonths       Int?
+  customTenureMonths Int?
+  nextRenewalDate    DateTime?
+  vehicleNo          String?
+  extras             String?   @db.Text
+  earnedPremium      Float?
+  epAmount           Float?
+  ppt                Int? // Premium Pay Terms (years)
+  pt                 Int? // Policy Terms (years)
+  notes              String?   @db.Text
+  referenceId        String?
+  assignedTo         String?
+  createdAt          DateTime  @default(now())
+  updatedAt          DateTime  @updatedAt
+
+  renewals  Renewal[]
+  documents Document[]
+
+  @@unique([policyNo, clientId, insurer, startDate])
+}
+
+model Renewal {
+  id            String   @id @default(uuid())
+  policyId      String
+  policy        Policy   @relation(fields: [policyId], references: [id], onDelete: Cascade)
+  dueDate       DateTime
+  status        String   @default("NEW")
+  remindersSent Int      @default(0)
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  activities Activity[]
+}
+
+model Document {
+  id           String   @id @default(uuid())
+  clientId     String
+  client       Client   @relation(fields: [clientId], references: [id], onDelete: Cascade)
+  policyId     String?
+  policy       Policy?  @relation(fields: [policyId], references: [id], onDelete: SetNull)
+  type         String
+  url          String   @db.Text
+  originalName String?
+  storedName   String?
+  mimeType     String?
+  fileSize     Int?
+  customTags   String?
+  createdAt    DateTime @default(now())
+}
+
+model Setting {
+  id        String   @id @default(uuid())
+  key       String   @unique
+  value     String   @db.Text
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Activity {
+  id           String    @id @default(uuid())
+  userId       String
+  user         User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  renewalId    String?
+  renewal      Renewal?  @relation(fields: [renewalId], references: [id], onDelete: Cascade)
+  type         String
+  notes        String    @db.Text
+  followupDate DateTime?
+  createdAt    DateTime  @default(now())
+}
+
+model Lead {
+  id               String   @id @default(uuid())
+  name             String
+  email            String?
+  mobile           String?
+  interestedPolicy String? // mapped to PolicyType string in application
+  status           String   @default("NEW") // mapped to LeadStatus string in application
+  notes            String?  @db.Text
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+}
+
+model AuditLog {
+  id         String   @id @default(uuid())
+  action     String
+  entityType String
+  entityId   String
+  details    String?  @db.Text
+  createdAt  DateTime @default(now())
+
+  userId String
+  user   User   @relation(fields: [userId], references: [id])
+}

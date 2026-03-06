@@ -1,0 +1,287 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+// String-based enums used in application:
+// Role: ADMIN, MANAGER, SALES, OPS, STAFF
+// PolicyType: LIFE, HEALTH, VEHICLE, OTHER
+// PolicyStatus: ACTIVE, PENDING, EXPIRED, CANCELLED, LAPSED
+// PaymentStatus: UNPAID, PARTIAL, PAID
+// RenewalStatus: NEW, CALLED, INTERESTED, PAYMENT_PENDING, RENEWED, LOST
+// DocVisibility: INTERNAL, CLIENT
+// ReferenceType: EMPLOYEE, AGENT, CLIENT, DIRECT
+// CommissionType: PERCENT, FLAT
+// CommissionStatus: PENDING, RECEIVED, PAID_OUT
+// LeadSource: WEBSITE, REFERRAL, WALK_IN, COLD_CALL, SOCIAL_MEDIA, OTHER
+
+model User {
+  id          String    @id @default(uuid())
+  email       String    @unique
+  password    String
+  name        String
+  role        String    @default("STAFF")
+  mobile      String?
+  joiningDate DateTime?
+  isActive    Boolean   @default(true)
+  permissions String?   @db.Text // JSON: { canEditClients, canDeletePolicies, canViewCommissions, ... }
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  activities        Activity[]
+  assignedPolicies  Policy[]   @relation("PolicyAssignee")
+  assignedRenewals  Renewal[]  @relation("RenewalAssignee")
+  assignedLeads     Lead[]     @relation("LeadAssignee")
+  assignedClients   Client[]   @relation("ClientAssignee")
+  assignedDocuments Document[] @relation("DocumentAssignee")
+  auditLogs         AuditLog[]
+}
+
+model Client {
+  id                  String    @id @default(uuid())
+  email               String?   @unique
+  mobile              String?   @unique
+  name                String
+  kycStatus           String?
+  notes               String?   @db.Text
+  address             String?   @db.Text
+  dob                 DateTime?
+  referenceSource     String?
+  referenceId         String?
+  reference           Reference? @relation("ClientReference", fields: [referenceId], references: [id], onDelete: SetNull)
+  defaultPaymentTerms String?   @db.Text   // Default payment terms template for this client
+  isDeleted           Boolean    @default(false)
+  assignedTo          String?
+  assignedUser        User?      @relation("ClientAssignee", fields: [assignedTo], references: [id], onDelete: SetNull)
+  createdAt           DateTime   @default(now())
+  updatedAt           DateTime   @updatedAt
+
+  policies  Policy[]
+  documents Document[]
+}
+
+model Policy {
+  id                 String   @id @default(uuid())
+  policyNo           String
+  clientId           String
+  client             Client   @relation(fields: [clientId], references: [id], onDelete: Cascade)
+  type               String
+  insurer            String
+  premium            Float
+  premiumPaid        Float?   @default(0)
+  paymentStatus      String   @default("UNPAID")
+  startDate          DateTime
+  expiryDate         DateTime
+  status             String   @default("ACTIVE")
+  attachments        String?  @db.Text
+  earnedPremium      Float?
+  notes              String?  @db.Text
+  extras             String?  @db.Text
+  vehicleNo          String?
+  referenceId        String?
+  reference          Reference? @relation("PolicyReference", fields: [referenceId], references: [id], onDelete: SetNull)
+  assignedTo         String?
+  assignedUser       User?    @relation("PolicyAssignee", fields: [assignedTo], references: [id], onDelete: SetNull)
+  // New fields for Payment Terms & Policy Terms
+  paymentTerms       String?  @db.Text   // Dropdown template + custom text override
+  policyTerms        String?  @db.Text   // Terms & conditions (rich text)
+  remarks            String?  @db.Text   // Internal notes / remarks
+  clientVisibleNotes String?  @db.Text   // Notes visible to client
+  epAmount           Float?              // Life policy EP (Expected/Entry Premium)
+  createdAt          DateTime @default(now())
+  updatedAt          DateTime @updatedAt
+
+  renewals        Renewal[]
+  policyDocuments PolicyDocument[]
+  payments        Payment[]
+  renewalHistory  RenewalHistory[]
+  commissions     Commission[]
+  activities      Activity[]     @relation("PolicyActivity")
+
+  @@unique([policyNo, clientId, insurer, startDate])
+  @@index([vehicleNo])
+  @@index([expiryDate])
+  @@index([status])
+  @@index([paymentStatus])
+}
+
+model Renewal {
+  id            String    @id @default(uuid())
+  policyId      String
+  policy        Policy    @relation(fields: [policyId], references: [id], onDelete: Cascade)
+  dueDate       DateTime
+  status        String    @default("NEW")
+  remindersSent Int       @default(0)
+  assignedTo    String?
+  assignedUser  User?     @relation("RenewalAssignee", fields: [assignedTo], references: [id], onDelete: SetNull)
+  comment       String?   @db.Text
+  nextFollowUp  DateTime?
+  lostReason    String?   @db.Text
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  activities Activity[]
+
+  @@index([dueDate])
+  @@index([status])
+}
+
+model PolicyDocument {
+  id         String   @id @default(uuid())
+  policyId   String
+  policy     Policy   @relation(fields: [policyId], references: [id], onDelete: Cascade)
+  type       String
+  url        String   @db.Text
+  visibility String   @default("INTERNAL")
+  createdAt  DateTime @default(now())
+
+  @@index([policyId])
+}
+
+model Payment {
+  id        String   @id @default(uuid())
+  policyId  String
+  policy    Policy   @relation(fields: [policyId], references: [id], onDelete: Cascade)
+  date      DateTime
+  amount    Float
+  mode      String
+  note      String?  @db.Text
+  createdAt DateTime @default(now())
+
+  @@index([policyId])
+}
+
+model RenewalHistory {
+  id          String   @id @default(uuid())
+  policyId    String
+  policy      Policy   @relation(fields: [policyId], references: [id], onDelete: Cascade)
+  renewalDate DateTime
+  insurer     String
+  premium     Float
+  remark      String?  @db.Text
+  createdAt   DateTime @default(now())
+
+  @@index([policyId])
+}
+
+model Document {
+  id         String   @id @default(uuid())
+  clientId   String
+  client     Client   @relation(fields: [clientId], references: [id], onDelete: Cascade)
+  type       String
+  url        String   @db.Text
+  customTags String?
+  assignedTo String?
+  assignedUser User?  @relation("DocumentAssignee", fields: [assignedTo], references: [id], onDelete: SetNull)
+  createdAt  DateTime @default(now())
+}
+
+model Activity {
+  id           String    @id @default(uuid())
+  userId       String
+  user         User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  renewalId    String?
+  renewal      Renewal?  @relation(fields: [renewalId], references: [id], onDelete: Cascade)
+  leadId       String?
+  lead         Lead?     @relation(fields: [leadId], references: [id], onDelete: Cascade)
+  policyId     String?
+  policy       Policy?   @relation("PolicyActivity", fields: [policyId], references: [id], onDelete: Cascade)
+  type         String    // NOTE, CALL, FOLLOW_UP, STATUS_CHANGE, EMAIL
+  notes        String    @db.Text
+  followupDate DateTime?
+  createdAt    DateTime  @default(now())
+
+  @@index([leadId])
+  @@index([policyId])
+  @@index([renewalId])
+}
+
+model Lead {
+  id               String    @id @default(uuid())
+  name             String
+  email            String?
+  mobile           String?
+  interestedPolicy String?
+  status           String    @default("NEW")
+  notes            String?   @db.Text
+  source           String?   // WEBSITE, REFERRAL, WALK_IN, COLD_CALL, SOCIAL_MEDIA, OTHER
+  tags             String?   @db.Text // JSON array of tags e.g. ["high-value","corporate"]
+  nextFollowUp     DateTime?
+  assignedTo       String?
+  assignedUser     User?     @relation("LeadAssignee", fields: [assignedTo], references: [id], onDelete: SetNull)
+  createdAt        DateTime  @default(now())
+  updatedAt        DateTime  @updatedAt
+
+  activities Activity[]
+
+  @@index([status])
+  @@index([assignedTo])
+  @@index([nextFollowUp])
+}
+
+model Reference {
+  id        String   @id @default(uuid())
+  type      String   // EMPLOYEE, AGENT, CLIENT, DIRECT
+  name      String
+  contact   String?
+  status    String   @default("ACTIVE") // ACTIVE, INACTIVE
+  code      String?  @unique // Referral code for link tracking
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  clients     Client[]     @relation("ClientReference")
+  policies    Policy[]     @relation("PolicyReference")
+  commissions Commission[] @relation("CommissionReference")
+  
+  @@index([type])
+  @@index([status])
+}
+
+model Commission {
+  id           String    @id @default(uuid())
+  policyId     String
+  policy       Policy    @relation(fields: [policyId], references: [id], onDelete: Cascade)
+  referenceId  String
+  reference    Reference @relation("CommissionReference", fields: [referenceId], references: [id], onDelete: Cascade)
+  premium      Float
+  type         String    // PERCENT, FLAT
+  rate         Float?    // The % or fixed amount applied
+  amount       Float     // Final calculated amount
+  status       String    @default("PENDING") // PENDING, RECEIVED, PAID_OUT
+  receivedDate DateTime?
+  paidOutDate  DateTime?
+  remarks      String?   @db.Text
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+
+  @@index([policyId])
+  @@index([referenceId])
+  @@index([status])
+}
+
+model Setting {
+  id          String   @id @default(uuid())
+  key         String   @unique
+  value       String   @db.Text
+  description String?  @db.Text
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+model AuditLog {
+  id          String   @id @default(uuid())
+  userId      String
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  action      String   // e.g., CREATE, UPDATE, DELETE, UPLOAD
+  entityType  String   // e.g., CLIENT, POLICY, RENEWAL, DOCUMENT
+  entityId    String   // ID of the affected entity
+  details     String?  @db.Text // Optional JSON string for extra info
+  createdAt   DateTime @default(now())
+
+  @@index([userId])
+  @@index([entityType, entityId])
+}
