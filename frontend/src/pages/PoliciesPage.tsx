@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import {
     Search, Plus, Trash2,
     IndianRupee,
-    Download, Upload, Eye, RefreshCw
+    Download, Upload, Eye, RefreshCw, X, CheckSquare
 } from 'lucide-react';
 import axios from 'axios';
 import clsx from 'clsx';
@@ -72,6 +72,7 @@ export default function PoliciesPage() {
     const [isMappingModalOpen, setIsMappingModalOpen] = useState(false);
     const [excelHeaders, setExcelHeaders] = useState<string[]>([]);
     const [excelRows, setExcelRows] = useState<any[]>([]);
+    const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
 
     const { user } = useAuth();
     const isManagerOrAdmin = user?.role === 'ADMIN' || user?.role === 'MANAGER';
@@ -164,6 +165,37 @@ export default function PoliciesPage() {
             console.error("Error deleting policy:", error);
             alert("Failed to delete policy.");
         }
+    };
+
+    // Bulk select helpers
+    const toggleSelect = (id: string) => {
+        setSelectedIds(prev => {
+            const next = new Set(prev);
+            if (next.has(id)) next.delete(id); else next.add(id);
+            return next;
+        });
+    };
+    const toggleSelectAll = () => {
+        if (selectedIds.size === policies.length) setSelectedIds(new Set());
+        else setSelectedIds(new Set(policies.map(p => p.id)));
+    };
+    const clearSelection = () => setSelectedIds(new Set());
+
+    const handleBulkDelete = async () => {
+        if (!window.confirm(`Delete ${selectedIds.size} selected policies? This cannot be undone.`)) return;
+        try {
+            await axios.post('/api/policies/bulk-delete', { ids: Array.from(selectedIds) });
+            clearSelection();
+            fetchData();
+        } catch { alert('Failed to bulk delete.'); }
+    };
+
+    const handleBulkStatus = async (status: string) => {
+        try {
+            await axios.put('/api/policies/bulk-status', { ids: Array.from(selectedIds), status });
+            clearSelection();
+            fetchData();
+        } catch { alert('Failed to bulk update status.'); }
     };
 
     const handleMarkPaid = async (policy: Policy) => {
@@ -368,6 +400,14 @@ export default function PoliciesPage() {
                     <table className="w-full text-left text-sm">
                         <thead className="bg-slate-50 border-b border-slate-100 text-xs font-semibold text-slate-500 uppercase tracking-wider">
                             <tr>
+                                <th className="px-4 py-3 w-10">
+                                    <input
+                                        type="checkbox"
+                                        checked={policies.length > 0 && selectedIds.size === policies.length}
+                                        onChange={toggleSelectAll}
+                                        className="w-4 h-4 rounded border-slate-300 text-blue-600 focus:ring-blue-500/20 cursor-pointer"
+                                    />
+                                </th>
                                 <th className="px-4 py-3 cursor-pointer hover:bg-slate-100 transition-colors" onClick={() => { setSortBy('policyNo'); setSortOrder(sortOrder === 'asc' ? 'desc' : 'asc'); }}>Policy No</th>
                                 <th className="px-4 py-3">Client</th>
                                 <th className="px-4 py-3">Type</th>
@@ -382,7 +422,7 @@ export default function PoliciesPage() {
                         <tbody className="divide-y divide-slate-100">
                             {loading ? (
                                 <tr>
-                                    <td colSpan={9} className="px-4 py-12 text-center text-slate-500">
+                                    <td colSpan={10} className="px-4 py-12 text-center text-slate-500">
                                         <div className="flex justify-center items-center gap-3">
                                             <div className="w-5 h-5 border-2 border-blue-600 border-t-transparent rounded-full animate-spin"></div>
                                             Loading policies...
@@ -391,7 +431,7 @@ export default function PoliciesPage() {
                                 </tr>
                             ) : policies.length === 0 ? (
                                 <tr>
-                                    <td colSpan={9} className="px-4 py-12 text-center text-slate-500">
+                                    <td colSpan={10} className="px-4 py-12 text-center text-slate-500">
                                         No policies found matching your criteria.
                                     </td>
                                 </tr>
@@ -403,7 +443,15 @@ export default function PoliciesPage() {
                                     const hasDocs = (policy._count?.policyDocuments || 0) > 0 || !!policy.attachments;
 
                                     return (
-                                        <tr key={policy.id} className="hover:bg-slate-50/80 transition-colors group">
+                                        <tr key={policy.id} className={clsx("hover:bg-slate-50/80 transition-colors group", selectedIds.has(policy.id) && "bg-blue-50/60")}>
+                                            <td className="px-4 py-3 w-10">
+                                                <input
+                                                    type="checkbox"
+                                                    checked={selectedIds.has(policy.id)}
+                                                    onChange={() => toggleSelect(policy.id)}
+                                                    className="w-4 h-4 rounded border-slate-300 text-blue-600 focus:ring-blue-500/20 cursor-pointer"
+                                                />
+                                            </td>
                                             <td className="px-4 py-3">
                                                 <div className="font-mono text-slate-700 font-semibold">{policy.policyNo}</div>
                                                 <div className="text-xs text-slate-400 mt-1">
@@ -534,6 +582,44 @@ export default function PoliciesPage() {
                     </div>
                 )}
             </div>
+
+            {/* Floating Bulk Action Bar */}
+            {selectedIds.size > 0 && (
+                <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-50 animate-in slide-in-from-bottom-4 duration-300">
+                    <div className="flex items-center gap-3 bg-slate-900 text-white px-5 py-3 rounded-2xl shadow-2xl border border-slate-700">
+                        <div className="flex items-center gap-2">
+                            <CheckSquare className="w-4 h-4 text-blue-400" />
+                            <span className="text-sm font-semibold">{selectedIds.size} selected</span>
+                        </div>
+                        <div className="w-px h-6 bg-slate-600" />
+                        <select
+                            defaultValue=""
+                            onChange={e => { if (e.target.value) { handleBulkStatus(e.target.value); e.target.value = ''; } }}
+                            className="bg-slate-800 text-white text-sm px-3 py-1.5 rounded-lg border border-slate-600 cursor-pointer hover:bg-slate-700 transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500/40"
+                        >
+                            <option value="" disabled>Change Status...</option>
+                            <option value="ACTIVE">Set Active</option>
+                            <option value="LAPSED">Set Lapsed</option>
+                            <option value="CANCELLED">Set Cancelled</option>
+                            <option value="EXPIRED">Set Expired</option>
+                        </select>
+                        <button
+                            onClick={handleBulkDelete}
+                            className="flex items-center gap-1.5 bg-red-600 hover:bg-red-700 text-white px-3 py-1.5 rounded-lg text-sm font-medium transition-colors"
+                        >
+                            <Trash2 className="w-3.5 h-3.5" />
+                            Delete
+                        </button>
+                        <button
+                            onClick={clearSelection}
+                            className="p-1.5 text-slate-400 hover:text-white hover:bg-slate-700 rounded-lg transition-colors"
+                            title="Clear selection"
+                        >
+                            <X className="w-4 h-4" />
+                        </button>
+                    </div>
+                </div>
+            )}
 
             <ImportMappingModal
                 isOpen={isMappingModalOpen}

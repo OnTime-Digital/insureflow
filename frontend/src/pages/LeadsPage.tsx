@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import {
     Search, Plus, Edit, Trash2, X,
     Phone, Mail, UserPlus, FileText, User,
-    LayoutGrid, List, ChevronRight
+    LayoutGrid, List, ChevronRight, GripVertical
 } from 'lucide-react';
 import axios from 'axios';
 import clsx from 'clsx';
@@ -45,6 +45,10 @@ export default function LeadsPage() {
     });
     const [formError, setFormError] = useState('');
     const [isSaving, setIsSaving] = useState(false);
+
+    // Drag-and-drop state
+    const [draggedLeadId, setDraggedLeadId] = useState<string | null>(null);
+    const [dropTargetStatus, setDropTargetStatus] = useState<string | null>(null);
 
     const fetchData = async () => {
         try {
@@ -133,6 +137,48 @@ export default function LeadsPage() {
         if (currentIndex < LEAD_STATUSES.length - 1) {
             await updateLeadStatusQuick(lead.id, LEAD_STATUSES[currentIndex + 1]);
         }
+    };
+
+    // Drag-and-drop handlers
+    const handleDragStart = (e: React.DragEvent, leadId: string) => {
+        setDraggedLeadId(leadId);
+        e.dataTransfer.effectAllowed = 'move';
+        e.dataTransfer.setData('text/plain', leadId);
+        // Make the drag ghost slightly transparent
+        if (e.currentTarget instanceof HTMLElement) {
+            setTimeout(() => { (e.currentTarget as HTMLElement).style.opacity = '0.4'; }, 0);
+        }
+    };
+    const handleDragEnd = (e: React.DragEvent) => {
+        setDraggedLeadId(null);
+        setDropTargetStatus(null);
+        if (e.currentTarget instanceof HTMLElement) {
+            e.currentTarget.style.opacity = '1';
+        }
+    };
+    const handleDragOver = (e: React.DragEvent, status: string) => {
+        e.preventDefault();
+        e.dataTransfer.dropEffect = 'move';
+        setDropTargetStatus(status);
+    };
+    const handleDragLeave = (e: React.DragEvent) => {
+        // Only clear if we're leaving the column container itself
+        const relatedTarget = e.relatedTarget as HTMLElement;
+        if (!e.currentTarget.contains(relatedTarget)) {
+            setDropTargetStatus(null);
+        }
+    };
+    const handleDrop = async (e: React.DragEvent, targetStatus: string) => {
+        e.preventDefault();
+        setDropTargetStatus(null);
+        const leadId = e.dataTransfer.getData('text/plain');
+        if (leadId && draggedLeadId) {
+            const lead = leads.find(l => l.id === leadId);
+            if (lead && lead.status !== targetStatus) {
+                await updateLeadStatusQuick(leadId, targetStatus);
+            }
+        }
+        setDraggedLeadId(null);
     };
 
     const filteredLeads = leads.filter(l =>
@@ -312,8 +358,15 @@ export default function LeadsPage() {
                             {LEAD_STATUSES.map(status => {
                                 const colors = STATUS_COLORS[status];
                                 const columnLeads = filteredLeads.filter(l => l.status === status);
+                                const isDropTarget = dropTargetStatus === status && draggedLeadId !== null;
                                 return (
-                                    <div key={status} className="w-72 shrink-0 flex flex-col">
+                                    <div
+                                        key={status}
+                                        className="w-72 shrink-0 flex flex-col"
+                                        onDragOver={(e) => handleDragOver(e, status)}
+                                        onDragLeave={handleDragLeave}
+                                        onDrop={(e) => handleDrop(e, status)}
+                                    >
                                         {/* Column Header */}
                                         <div className={clsx("rounded-t-xl px-4 py-3 flex items-center justify-between", colors.headerBg)}>
                                             <div className="flex items-center gap-2">
@@ -328,7 +381,11 @@ export default function LeadsPage() {
                                         </div>
 
                                         {/* Cards container */}
-                                        <div className={clsx("rounded-b-xl border-x border-b p-3 flex flex-col gap-3 min-h-[200px] flex-1", colors.border, "bg-slate-50/50")}>
+                                        <div className={clsx(
+                                            "rounded-b-xl border-x border-b p-3 flex flex-col gap-3 min-h-[200px] flex-1 transition-all duration-200",
+                                            colors.border, "bg-slate-50/50",
+                                            isDropTarget && "ring-2 ring-blue-400 bg-blue-50/40 border-blue-300 scale-[1.01]"
+                                        )}>
                                             {columnLeads.length === 0 ? (
                                                 <div className="flex-1 flex items-center justify-center">
                                                     <p className="text-xs text-slate-400 italic">No leads</p>
@@ -337,13 +394,22 @@ export default function LeadsPage() {
                                                 columnLeads.map(lead => (
                                                     <div
                                                         key={lead.id}
-                                                        className="bg-white rounded-lg border border-slate-200 shadow-sm hover:shadow-md transition-all p-4 space-y-3 group/card"
+                                                        draggable
+                                                        onDragStart={(e) => handleDragStart(e, lead.id)}
+                                                        onDragEnd={handleDragEnd}
+                                                        className={clsx(
+                                                            "bg-white rounded-lg border border-slate-200 shadow-sm hover:shadow-md transition-all p-4 space-y-3 group/card cursor-grab active:cursor-grabbing",
+                                                            draggedLeadId === lead.id && "opacity-40 ring-2 ring-blue-300"
+                                                        )}
                                                     >
                                                         {/* Lead Name + Edit */}
                                                         <div className="flex items-start justify-between">
                                                             <div className="flex items-center gap-2.5">
-                                                                <div className={clsx("w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold shrink-0", colors.bg, colors.text)}>
-                                                                    {lead.name.substring(0, 2).toUpperCase()}
+                                                                <div className="flex items-center">
+                                                                    <GripVertical className="w-4 h-4 text-slate-300 mr-1 opacity-0 group-hover/card:opacity-100 transition-opacity" />
+                                                                    <div className={clsx("w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold shrink-0", colors.bg, colors.text)}>
+                                                                        {lead.name.substring(0, 2).toUpperCase()}
+                                                                    </div>
                                                                 </div>
                                                                 <div>
                                                                     <p className="font-semibold text-sm text-slate-900 leading-tight">{lead.name}</p>

@@ -18,12 +18,12 @@ export async function runSeed() {
     console.log('Cleared all existing data.');
 
     // 1. Admin User
-    const hashedPassword = await bcrypt.hash('admin123', 10);
+    const hashedPassword = await bcrypt.hash('admin1223', 10);
     const adminUser = await prisma.user.create({
         data: {
-            email: 'admin@insureflow.com',
+            email: 'ontimedigital24@gmail.com',
             password: hashedPassword,
-            name: 'Admin User',
+            name: 'Admin',
             role: 'ADMIN',
         }
     });
@@ -136,4 +136,14 @@ export async function runSeed() {
     console.log(`   • ${policies.length} Policies`);
     console.log(`   • ${renewalsData.length} Renewals`);
     console.log(`   • ${leadsData.length} Leads`);
+}
+
+if (require.main === module) {
+    runSeed()
+        .then(() => prisma.$disconnect())
+        .catch(async (e) => {
+            console.error(e);
+            await prisma.$disconnect();
+            process.exit(1);
+        });
 }

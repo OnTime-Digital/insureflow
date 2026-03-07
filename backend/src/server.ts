@@ -77,14 +77,6 @@ app.use('/api/policy-documents', policyDocumentsRoutes);
 // Static uploads serving
 app.use('/uploads', express.static(path.join(process.cwd(), 'uploads')));
 
-// Static frontend serving
-app.use(express.static(path.join(process.cwd(), 'public')));
-app.get('{*path}', (req: Request, res: Response) => {
-    if (!req.path.startsWith('/api')) {
-        res.sendFile(path.join(process.cwd(), 'public', 'index.html'));
-    }
-});
-
 app.use((err: Error, req: Request, res: Response, next: NextFunction) => {
     console.error(err.stack);
     res.status(500).json({ status: 'error', message: err.message || 'Internal Server Error' });

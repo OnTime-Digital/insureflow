@@ -1,8 +1,8 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useNavigate, Link, useParams } from 'react-router-dom';
 import {
     ArrowLeft, User, ShieldCheck, IndianRupee, Building2,
-    Calendar, Link as LinkIcon, FileText, Car, Activity, ShieldAlert, Plus, Link2, Clock
+    Calendar, Link as LinkIcon, FileText, Car, ShieldAlert, Plus, Clock
 } from 'lucide-react';
 import axios from 'axios';
 import { format, addMonths } from 'date-fns';
@@ -60,6 +60,15 @@ export default function PolicyAddPage() {
 
     const [error, setError] = useState('');
     const [isSaving, setIsSaving] = useState(false);
+
+    // Reference Autocomplete and Creation State
+    const suggestionsRef = useRef<HTMLDivElement>(null);
+    const [referredByInput, setReferredByInput] = useState('');
+    const [showSuggestions, setShowSuggestions] = useState(false);
+    const [isCreatingRef, setIsCreatingRef] = useState(false);
+    const [newRefName, setNewRefName] = useState('');
+    const [newRefType, setNewRefType] = useState('AGENT');
+    const [isSavingRef, setIsSavingRef] = useState(false);
 
     useEffect(() => {
         const fetchClients = async () => {
@@ -139,6 +148,9 @@ export default function PolicyAddPage() {
                     pt: p.pt?.toString() || '',
                     otherSubType: extrasObj.subType || 'FIRE'
                 });
+                if (p.reference) {
+                    setReferredByInput(p.reference.name);
+                }
                 setExtras(extrasObj);
             } catch (err) {
                 console.error("Error fetching policy for edit", err);
@@ -151,6 +163,55 @@ export default function PolicyAddPage() {
         fetchSettings();
         fetchPolicyForEdit();
     }, [editId]);
+
+    // Close suggestions on outside click
+    useEffect(() => {
+        const handleClickOutside = (e: MouseEvent) => {
+            if (suggestionsRef.current && !suggestionsRef.current.contains(e.target as Node)) {
+                setShowSuggestions(false);
+            }
+        };
+        document.addEventListener('mousedown', handleClickOutside);
+        return () => document.removeEventListener('mousedown', handleClickOutside);
+    }, []);
+
+    const filteredRefs = references.filter((ref: any) =>
+        ref.name.toLowerCase().includes(referredByInput.toLowerCase())
+    );
+
+    const handleSelectRef = (ref: any) => {
+        setReferredByInput(ref.name);
+        setFormData({ ...formData, referenceId: ref.id });
+        setShowSuggestions(false);
+        setIsCreatingRef(false);
+    };
+
+    const handleReferredByChange = (value: string) => {
+        setReferredByInput(value);
+        if (!value) setFormData({ ...formData, referenceId: '' });
+        setShowSuggestions(true);
+        setIsCreatingRef(false);
+    };
+
+    const handleCreateRef = async () => {
+        if (!newRefName.trim()) return;
+        setIsSavingRef(true);
+        try {
+            const res = await axios.post('/api/references', {
+                name: newRefName,
+                type: newRefType,
+                status: 'ACTIVE'
+            });
+            const createdRef = res.data;
+            setReferences([...references, createdRef]);
+            handleSelectRef(createdRef);
+        } catch (err: any) {
+            console.error('Failed to create reference', err);
+            alert(err.response?.data?.error || 'Failed to create reference');
+        } finally {
+            setIsSavingRef(false);
+        }
+    };
 
     // Auto-calculate expiryDate based on tenureType + startDate
     useEffect(() => {
@@ -173,13 +234,25 @@ export default function PolicyAddPage() {
 
     // Auto-calculate expiryDate for CUSTOM when customTenureMonths changes
     useEffect(() => {
-        if (formData.tenureType !== 'CUSTOM' || !formData.customTenureMonths || !formData.startDate) return;
+        if (!formData.startDate) return;
+
+        // Auto-calc for Life policies based on PT (Policy Terms) instead of Tenure
+        if (formData.type === 'Life' && formData.pt) {
+            const years = parseInt(formData.pt);
+            if (years > 0) {
+                const end = addMonths(new Date(formData.startDate), years * 12);
+                setFormData(prev => ({ ...prev, expiryDate: format(end, 'yyyy-MM-dd') }));
+            }
+            return;
+        }
+
+        if (formData.tenureType !== 'CUSTOM' || !formData.customTenureMonths) return;
         const months = parseInt(formData.customTenureMonths);
         if (months > 0) {
             const end = addMonths(new Date(formData.startDate), months);
             setFormData(prev => ({ ...prev, expiryDate: format(end, 'yyyy-MM-dd') }));
         }
-    }, [formData.customTenureMonths, formData.startDate, formData.tenureType]);
+    }, [formData.customTenureMonths, formData.startDate, formData.tenureType, formData.pt, formData.type]);
 
     // Reset extras when type changes
     useEffect(() => {
@@ -323,28 +396,8 @@ export default function PolicyAddPage() {
             );
         }
         if (formData.type === 'Life') {
-            return (
-                <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 animate-in fade-in duration-300">
-                    <div className="space-y-1">
-                        <label className="text-sm font-medium text-slate-700">Client DOB (Verify)</label>
-                        <input type="date" value={extras.dob || ''} onChange={e => setExtras({ ...extras, dob: e.target.value })} className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/20 transition-colors sm:text-sm" />
-                    </div>
-                    <div className="space-y-1">
-                        <label className="text-sm font-medium text-slate-700">Sum Assured</label>
-                        <div className="relative">
-                            <Activity className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
-                            <input type="text" value={extras.sumAssured || ''} onChange={e => setExtras({ ...extras, sumAssured: e.target.value })} className="w-full pl-9 pr-3 py-2 bg-slate-50 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/20 transition-colors sm:text-sm" placeholder="e.g. 50L, 1Cr" />
-                        </div>
-                    </div>
-                    <div className="space-y-1">
-                        <label className="text-sm font-medium text-slate-700">EP Amount <span className="text-xs text-blue-500 font-normal">(Entry/Expected Premium)</span></label>
-                        <div className="relative">
-                            <IndianRupee className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-emerald-500" />
-                            <input type="number" step="0.01" min="0" value={formData.epAmount} onChange={e => setFormData({ ...formData, epAmount: e.target.value })} className="w-full pl-9 pr-3 py-2 bg-emerald-50 border border-emerald-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500/20 transition-colors sm:text-sm font-semibold text-emerald-700" placeholder="EP Amount" />
-                        </div>
-                    </div>
-                </div>
-            );
+            // Life details removed per user requirements; Maturity Date is handled via PT (Policy Terms).
+            return null;
         }
         if (formData.type === 'Other') {
             return (
@@ -456,7 +509,7 @@ export default function PolicyAddPage() {
                 )}
 
                 {/* Core Policy Info */}
-                <div className="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden p-6 space-y-6">
+                <div className="bg-white rounded-xl border border-slate-200 shadow-sm p-6 space-y-6">
                     <h2 className="text-lg font-bold text-slate-800 border-b border-slate-100 pb-2 flex items-center gap-2">
                         <ShieldCheck className="w-5 h-5 text-emerald-500" /> Core Policy info
                     </h2>
@@ -526,7 +579,7 @@ export default function PolicyAddPage() {
                         </div>
                     )}
 
-                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 border-t border-slate-100 pt-4">
+                    <div className={clsx("grid grid-cols-1 gap-4 border-t border-slate-100 pt-4", formData.type === 'Life' ? "sm:grid-cols-3" : "sm:grid-cols-2")}>
                         <div className="space-y-1">
                             <div className="flex justify-between items-center">
                                 <label className="text-sm font-medium text-slate-700">Premium Paid</label>
@@ -550,13 +603,15 @@ export default function PolicyAddPage() {
                                 }} className="w-full pl-9 pr-3 py-2 bg-slate-50 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/20 transition-colors sm:text-sm font-medium text-emerald-700" placeholder="0.00" />
                             </div>
                         </div>
-                        <div className="space-y-1">
-                            <label className="text-sm font-medium text-slate-700">Earnings / EP</label>
-                            <div className="relative">
-                                <IndianRupee className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
-                                <input type="number" step="0.01" min="0" value={formData.earnedPremium} onChange={e => setFormData({ ...formData, earnedPremium: e.target.value })} className="w-full pl-9 pr-3 py-2 bg-slate-50 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/20 transition-colors sm:text-sm font-medium" placeholder="Earned Premium" />
+                        {formData.type === 'Life' && (
+                            <div className="space-y-1">
+                                <label className="text-sm font-medium text-slate-700">Earnings / EP</label>
+                                <div className="relative">
+                                    <IndianRupee className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+                                    <input type="number" step="0.01" min="0" value={formData.earnedPremium} onChange={e => setFormData({ ...formData, earnedPremium: e.target.value })} className="w-full pl-9 pr-3 py-2 bg-slate-50 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/20 transition-colors sm:text-sm font-medium" placeholder="Earned Premium" />
+                                </div>
                             </div>
-                        </div>
+                        )}
                         <div className="space-y-1">
                             <label className="text-sm font-medium text-slate-700">Policy Status</label>
                             <select value={formData.status} onChange={e => setFormData({ ...formData, status: e.target.value })} className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/20 transition-colors sm:text-sm font-medium">
@@ -564,35 +619,40 @@ export default function PolicyAddPage() {
                                 <option value="PENDING">PENDING</option>
                                 <option value="LAPSED">LAPSED</option>
                                 <option value="CANCELLED">CANCELLED</option>
-                                <option value="MATURITY">MATURITY</option>
+                                {formData.type === 'Life' && <option value="MATURITY">MATURITY</option>}
+                                {formData.type !== 'Life' && <option value="EXPIRED">EXPIRED</option>}
                             </select>
                         </div>
                     </div>
 
                     {/* PPT & PT Section */}
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 border-t border-slate-100 pt-4">
-                        <div className="space-y-1">
-                            <label className="text-sm font-medium text-slate-700">PPT <span className="text-xs text-blue-500 font-normal">(Premium Pay Terms — Years)</span></label>
-                            <input type="number" min="1" max="100" value={formData.ppt} onChange={e => setFormData({ ...formData, ppt: e.target.value })} className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/20 transition-colors sm:text-sm" placeholder="e.g. 10" />
+                    {formData.type === 'Life' && (
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 border-t border-slate-100 pt-4">
+                            <div className="space-y-1">
+                                <label className="text-sm font-medium text-slate-700">PPT <span className="text-xs text-blue-500 font-normal">(Premium Pay Terms — Years)</span></label>
+                                <input type="number" min="1" max="100" value={formData.ppt} onChange={e => setFormData({ ...formData, ppt: e.target.value })} className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/20 transition-colors sm:text-sm" placeholder="e.g. 10" />
+                            </div>
+                            <div className="space-y-1">
+                                <label className="text-sm font-medium text-slate-700">PT <span className="text-xs text-blue-500 font-normal">(Policy Terms — Years)</span></label>
+                                <input type="number" min="1" max="100" value={formData.pt} onChange={e => setFormData({ ...formData, pt: e.target.value })} className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/20 transition-colors sm:text-sm" placeholder="e.g. 20" />
+                            </div>
                         </div>
-                        <div className="space-y-1">
-                            <label className="text-sm font-medium text-slate-700">PT <span className="text-xs text-blue-500 font-normal">(Policy Terms — Years)</span></label>
-                            <input type="number" min="1" max="100" value={formData.pt} onChange={e => setFormData({ ...formData, pt: e.target.value })} className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/20 transition-colors sm:text-sm" placeholder="e.g. 20" />
-                        </div>
-                    </div>
+                    )}
 
-                    {/* Tenure Section */}
-                    <div className="grid grid-cols-1 sm:grid-cols-4 gap-4 border-t border-slate-100 pt-4">
-                        <div className="space-y-1">
-                            <label className="text-sm font-medium text-slate-700 flex items-center gap-1"><Clock className="w-3.5 h-3.5 text-blue-500" /> Tenure <span className="text-red-500">*</span></label>
-                            <select value={formData.tenureType} onChange={e => setFormData({ ...formData, tenureType: e.target.value, customTenureMonths: '' })} className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/20 transition-colors sm:text-sm font-medium">
-                                <option value="MONTHLY">Monthly (1 Month)</option>
-                                <option value="QUARTERLY">Quarterly (3 Months)</option>
-                                <option value="HALF_YEARLY">Half-Yearly (6 Months)</option>
-                                <option value="YEARLY">Yearly (12 Months)</option>
-                                <option value="CUSTOM">Custom</option>
-                            </select>
-                        </div>
+                    {/* Dates & Tenure Section */}
+                    <div className={clsx("grid grid-cols-1 gap-4 border-t border-slate-100 pt-4", formData.type === 'Life' ? "sm:grid-cols-2" : "sm:grid-cols-4")}>
+                        {formData.type !== 'Life' && (
+                            <div className="space-y-1">
+                                <label className="text-sm font-medium text-slate-700 flex items-center gap-1"><Clock className="w-3.5 h-3.5 text-blue-500" /> Tenure <span className="text-red-500">*</span></label>
+                                <select value={formData.tenureType} onChange={e => setFormData({ ...formData, tenureType: e.target.value, customTenureMonths: '' })} className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/20 transition-colors sm:text-sm font-medium">
+                                    <option value="MONTHLY">Monthly (1 Month)</option>
+                                    <option value="QUARTERLY">Quarterly (3 Months)</option>
+                                    <option value="HALF_YEARLY">Half-Yearly (6 Months)</option>
+                                    <option value="YEARLY">Yearly (12 Months)</option>
+                                    <option value="CUSTOM">Custom</option>
+                                </select>
+                            </div>
+                        )}
                         <div className="space-y-1">
                             <label className="text-sm font-medium text-slate-700">Start Date <span className="text-red-500">*</span></label>
                             <div className="relative">
@@ -601,7 +661,9 @@ export default function PolicyAddPage() {
                             </div>
                         </div>
                         <div className="space-y-1">
-                            <label className="text-sm font-medium text-slate-700">Expiry / Renewal Date <span className="text-red-500">*</span></label>
+                            <label className="text-sm font-medium text-slate-700">
+                                {formData.type === 'Life' ? 'Maturity / Expiry Date' : 'Expiry / Renewal Date'} <span className="text-red-500">*</span>
+                            </label>
                             <div className="relative">
                                 <Calendar className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
                                 <input
@@ -609,50 +671,129 @@ export default function PolicyAddPage() {
                                     type="date"
                                     value={formData.expiryDate}
                                     onChange={e => setFormData({ ...formData, expiryDate: e.target.value })}
-                                    readOnly={formData.tenureType !== 'CUSTOM'}
+                                    readOnly={formData.type !== 'Life' && formData.tenureType !== 'CUSTOM'}
                                     className={clsx(
                                         "w-full pl-9 pr-3 py-2 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/20 transition-colors sm:text-sm font-medium",
-                                        formData.tenureType !== 'CUSTOM'
+                                        (formData.type !== 'Life' && formData.tenureType !== 'CUSTOM')
                                             ? "bg-slate-100 text-slate-500 cursor-not-allowed"
                                             : "bg-slate-50 text-red-600"
                                     )}
                                 />
                             </div>
-                            {formData.tenureType !== 'CUSTOM' && (
+                            {formData.type !== 'Life' && formData.tenureType !== 'CUSTOM' && (
                                 <p className="text-[10px] text-blue-500 font-medium">Auto-calculated from tenure</p>
                             )}
-                        </div>
-                        <div className="space-y-1">
-                            {formData.tenureType === 'CUSTOM' ? (
-                                <>
-                                    <label className="text-sm font-medium text-slate-700">Custom Months <span className="text-xs text-slate-400">(optional)</span></label>
-                                    <input
-                                        type="number" min="1" max="600"
-                                        value={formData.customTenureMonths}
-                                        onChange={e => setFormData({ ...formData, customTenureMonths: e.target.value })}
-                                        className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/20 transition-colors sm:text-sm"
-                                        placeholder="e.g. 15"
-                                    />
-                                </>
-                            ) : (
-                                <div className="pt-6">
-                                    <p className="text-xs text-slate-400">Auto-select expiry based on tenure</p>
-                                </div>
+                            {formData.type === 'Life' && (
+                                <p className="text-[10px] text-blue-500 font-medium">Auto-calculated from PT (Policy Term)</p>
                             )}
                         </div>
+                        {formData.type !== 'Life' && (
+                            <div className="space-y-1">
+                                {formData.tenureType === 'CUSTOM' ? (
+                                    <>
+                                        <label className="text-sm font-medium text-slate-700">Custom Months <span className="text-xs text-slate-400">(optional)</span></label>
+                                        <input
+                                            type="number" min="1" max="600"
+                                            value={formData.customTenureMonths}
+                                            onChange={e => setFormData({ ...formData, customTenureMonths: e.target.value })}
+                                            className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/20 transition-colors sm:text-sm"
+                                            placeholder="e.g. 15"
+                                        />
+                                    </>
+                                ) : (
+                                    <div className="pt-6">
+                                        <p className="text-xs text-slate-400">Auto-select expiry</p>
+                                    </div>
+                                )}
+                            </div>
+                        )}
                     </div>
 
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 border-t border-slate-100 pt-4 mt-2">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 border-t border-slate-100 pt-4 mt-2 relative z-50">
                         <div className="space-y-1">
                             <label className="text-sm font-medium text-slate-700">Referred By (Optional)</label>
-                            <div className="relative">
-                                <Link2 className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
-                                <select value={formData.referenceId} onChange={e => setFormData({ ...formData, referenceId: e.target.value })} className="w-full pl-9 pr-3 py-2 bg-slate-50 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-colors sm:text-sm">
-                                    <option value="">-- Direct (No Referrer) --</option>
-                                    {references.map(ref => (
-                                        <option key={ref.id} value={ref.id}>{ref.name} ({ref.type}) {ref.code ? `- ${ref.code}` : ''}</option>
-                                    ))}
-                                </select>
+                            <div className="relative" ref={suggestionsRef}>
+                                <User className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+                                <input
+                                    type="text"
+                                    value={referredByInput}
+                                    onChange={e => handleReferredByChange(e.target.value)}
+                                    onFocus={() => { setShowSuggestions(true); }}
+                                    className="w-full pl-9 pr-3 py-2 bg-slate-50 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-colors sm:text-sm"
+                                    placeholder="Type referrer name or select from list..."
+                                />
+                                {showSuggestions && (
+                                    <div className="absolute z-50 left-0 right-0 mt-1 bg-white border border-slate-200 rounded-lg shadow-xl max-h-96 overflow-y-auto">
+                                        {!isCreatingRef ? (
+                                            <>
+                                                {filteredRefs.map((ref: any) => (
+                                                    <button
+                                                        key={ref.id}
+                                                        type="button"
+                                                        onClick={() => handleSelectRef(ref)}
+                                                        className="w-full px-4 py-2.5 text-left text-sm hover:bg-blue-50 transition-colors flex items-center justify-between border-b border-slate-50 last:border-0"
+                                                    >
+                                                        <span className="font-medium text-slate-800">{ref.name}</span>
+                                                        <span className="text-xs text-slate-500">{ref.type} {ref.code ? `· ${ref.code}` : ''}</span>
+                                                    </button>
+                                                ))}
+                                                <div className="p-2 border-t border-slate-100 bg-slate-50">
+                                                    <button
+                                                        type="button"
+                                                        onClick={() => {
+                                                            setIsCreatingRef(true);
+                                                            setNewRefName(referredByInput || '');
+                                                        }}
+                                                        className="w-full py-2 flex items-center justify-center gap-2 text-sm font-semibold text-blue-600 hover:text-blue-700 hover:bg-blue-100/50 rounded-md transition-colors"
+                                                    >
+                                                        <Plus className="w-4 h-4" />
+                                                        Create New Reference
+                                                    </button>
+                                                </div>
+                                            </>
+                                        ) : (
+                                            <div className="p-4 space-y-3 bg-blue-50/30">
+                                                <h4 className="text-xs font-semibold text-slate-500 uppercase tracking-wider">Quick Create Reference</h4>
+                                                <div className="space-y-2">
+                                                    <input
+                                                        type="text"
+                                                        value={newRefName}
+                                                        onChange={e => setNewRefName(e.target.value)}
+                                                        placeholder="Reference Name"
+                                                        className="w-full px-3 py-2 border border-slate-200 text-sm rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500"
+                                                    />
+                                                    <select
+                                                        value={newRefType}
+                                                        onChange={e => setNewRefType(e.target.value)}
+                                                        className="w-full px-3 py-2 border border-slate-200 text-sm rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500 bg-white"
+                                                    >
+                                                        <option value="AGENT">Agent</option>
+                                                        <option value="EMPLOYEE">Employee</option>
+                                                        <option value="CLIENT">Client</option>
+                                                        <option value="DIRECT">Direct/Other</option>
+                                                    </select>
+                                                    <div className="flex items-center gap-2 pt-1">
+                                                        <button
+                                                            type="button"
+                                                            onClick={() => setIsCreatingRef(false)}
+                                                            className="flex-1 py-1.5 text-xs font-medium text-slate-600 hover:bg-slate-100 rounded-md transition"
+                                                        >
+                                                            Cancel
+                                                        </button>
+                                                        <button
+                                                            type="button"
+                                                            onClick={handleCreateRef}
+                                                            disabled={!newRefName.trim() || isSavingRef}
+                                                            className="flex-1 py-1.5 text-xs font-semibold text-white bg-blue-600 hover:bg-blue-700 rounded-md transition disabled:opacity-50"
+                                                        >
+                                                            {isSavingRef ? 'Saving...' : 'Save & Select'}
+                                                        </button>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        )}
+                                    </div>
+                                )}
                             </div>
                         </div>
 

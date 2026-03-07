@@ -6,6 +6,7 @@ import {
     createClient,
     updateClient,
     deleteClient,
+    bulkDeleteClients,
     exportClients,
     importClients,
     importClientsJson
@@ -17,6 +18,7 @@ const upload = multer({ dest: 'uploads/' });
 router.get('/export', exportClients);
 router.post('/import', upload.single('file'), importClients);
 router.post('/import-json', importClientsJson);
+router.post('/bulk-delete', bulkDeleteClients);
 
 router.get('/', getClients);
 router.get('/:id', getClientById);

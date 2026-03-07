@@ -26,22 +26,73 @@ function calculateEndDate(startDate: Date, tenureType: string, customMonths?: nu
 // Get all policies
 export const getPolicies = async (req: Request, res: Response) => {
     try {
-        const { status, type } = req.query;
+        const {
+            status, type, search, insurer, paymentStatus,
+            renewalWindow, referenceId, assignedTo,
+            page = '1', limit = '50',
+            sortBy = 'createdAt', sortOrder = 'desc'
+        } = req.query as Record<string, string>;
+
         let where: any = {};
         if (status) where.status = status;
         if (type) where.type = type;
+        if (insurer) where.insurer = { contains: insurer };
+        if (paymentStatus) where.paymentStatus = paymentStatus;
+        if (referenceId) where.referenceId = referenceId;
+        if (assignedTo) where.assignedTo = assignedTo;
 
-        const policies = await prisma.policy.findMany({
-            where,
-            orderBy: { createdAt: 'desc' },
-            include: {
-                client: {
-                    select: { name: true, email: true }
-                }
+        if (search) {
+            where.OR = [
+                { policyNo: { contains: search } },
+                { insurer: { contains: search } },
+                { vehicleNo: { contains: search } },
+                { client: { name: { contains: search } } },
+                { client: { mobile: { contains: search } } },
+            ];
+        }
+
+        if (renewalWindow) {
+            const now = new Date();
+            let futureDate = new Date();
+            if (renewalWindow === '7') futureDate.setDate(now.getDate() + 7);
+            else if (renewalWindow === '30') futureDate.setDate(now.getDate() + 30);
+            else if (renewalWindow === '60') futureDate.setDate(now.getDate() + 60);
+            else if (renewalWindow === '90') futureDate.setDate(now.getDate() + 90);
+            if (renewalWindow !== '') {
+                where.expiryDate = { gte: now, lte: futureDate };
             }
+        }
+
+        const pageNum = Math.max(1, parseInt(page) || 1);
+        const limitNum = Math.max(1, Math.min(200, parseInt(limit) || 50));
+        const skip = (pageNum - 1) * limitNum;
+
+        const allowedSortFields = ['expiryDate', 'createdAt', 'premium', 'policyNo', 'startDate'];
+        const safeSortBy = allowedSortFields.includes(sortBy as string) ? sortBy : 'createdAt';
+        const safeSortOrder = sortOrder === 'asc' ? 'asc' : 'desc';
+
+        const [policies, total] = await Promise.all([
+            prisma.policy.findMany({
+                where,
+                orderBy: { [safeSortBy]: safeSortOrder },
+                skip,
+                take: limitNum,
+                include: {
+                    client: { select: { name: true, email: true, mobile: true } },
+                    reference: { select: { name: true, code: true } }
+                }
+            }),
+            prisma.policy.count({ where })
+        ]);
+
+        res.json({
+            data: policies,
+            total,
+            totalPages: Math.ceil(total / limitNum),
+            page: pageNum
         });
-        res.json(policies);
     } catch (error) {
+        console.error('Error fetching policies:', error);
         res.status(500).json({ error: 'Failed to fetch policies' });
     }
 };
@@ -447,5 +498,40 @@ export const importPoliciesJson = async (req: Request, res: Response): Promise<v
     } catch (error) {
         console.error("Import JSON Error:", error);
         res.status(500).json({ error: "Failed to import policies from JSON" });
+    }
+};
+
+// Bulk delete policies
+export const bulkDeletePolicies = async (req: Request, res: Response) => {
+    try {
+        const { ids } = req.body;
+        if (!ids || !Array.isArray(ids) || ids.length === 0) {
+            return res.status(400).json({ error: 'No policy IDs provided' });
+        }
+        await prisma.renewal.deleteMany({ where: { policyId: { in: ids } } });
+        await prisma.document.deleteMany({ where: { policyId: { in: ids } } });
+        const result = await prisma.policy.deleteMany({ where: { id: { in: ids } } });
+        res.json({ deleted: result.count });
+    } catch (error) {
+        console.error('Bulk delete error:', error);
+        res.status(500).json({ error: 'Failed to bulk delete policies' });
+    }
+};
+
+// Bulk update policy status
+export const bulkUpdatePolicyStatus = async (req: Request, res: Response) => {
+    try {
+        const { ids, status } = req.body;
+        if (!ids || !Array.isArray(ids) || ids.length === 0 || !status) {
+            return res.status(400).json({ error: 'Missing ids or status' });
+        }
+        const result = await prisma.policy.updateMany({
+            where: { id: { in: ids } },
+            data: { status }
+        });
+        res.json({ updated: result.count });
+    } catch (error) {
+        console.error('Bulk status update error:', error);
+        res.status(500).json({ error: 'Failed to bulk update policy status' });
     }
 };

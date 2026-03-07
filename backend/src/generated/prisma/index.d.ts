@@ -58,6 +58,11 @@ export type Lead = $Result.DefaultSelection<Prisma.$LeadPayload>
  * 
  */
 export type AuditLog = $Result.DefaultSelection<Prisma.$AuditLogPayload>
+/**
+ * Model Reference
+ * 
+ */
+export type Reference = $Result.DefaultSelection<Prisma.$ReferencePayload>
 
 /**
  * ##  Prisma Client ʲˢ
@@ -266,6 +271,16 @@ export class PrismaClient<
     * ```
     */
   get auditLog(): Prisma.AuditLogDelegate<ExtArgs, ClientOptions>;
+
+  /**
+   * `prisma.reference`: Exposes CRUD operations for the **Reference** model.
+    * Example usage:
+    * ```ts
+    * // Fetch zero or more References
+    * const references = await prisma.reference.findMany()
+    * ```
+    */
+  get reference(): Prisma.ReferenceDelegate<ExtArgs, ClientOptions>;
 }
 
 export namespace Prisma {
@@ -715,7 +730,8 @@ export namespace Prisma {
     Setting: 'Setting',
     Activity: 'Activity',
     Lead: 'Lead',
-    AuditLog: 'AuditLog'
+    AuditLog: 'AuditLog',
+    Reference: 'Reference'
   };
 
   export type ModelName = (typeof ModelName)[keyof typeof ModelName]
@@ -734,7 +750,7 @@ export namespace Prisma {
       omit: GlobalOmitOptions
     }
     meta: {
-      modelProps: "user" | "client" | "policy" | "renewal" | "document" | "setting" | "activity" | "lead" | "auditLog"
+      modelProps: "user" | "client" | "policy" | "renewal" | "document" | "setting" | "activity" | "lead" | "auditLog" | "reference"
       txIsolationLevel: Prisma.TransactionIsolationLevel
     }
     model: {
@@ -1332,6 +1348,72 @@ export namespace Prisma {
           }
         }
       }
+      Reference: {
+        payload: Prisma.$ReferencePayload<ExtArgs>
+        fields: Prisma.ReferenceFieldRefs
+        operations: {
+          findUnique: {
+            args: Prisma.ReferenceFindUniqueArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$ReferencePayload> | null
+          }
+          findUniqueOrThrow: {
+            args: Prisma.ReferenceFindUniqueOrThrowArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$ReferencePayload>
+          }
+          findFirst: {
+            args: Prisma.ReferenceFindFirstArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$ReferencePayload> | null
+          }
+          findFirstOrThrow: {
+            args: Prisma.ReferenceFindFirstOrThrowArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$ReferencePayload>
+          }
+          findMany: {
+            args: Prisma.ReferenceFindManyArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$ReferencePayload>[]
+          }
+          create: {
+            args: Prisma.ReferenceCreateArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$ReferencePayload>
+          }
+          createMany: {
+            args: Prisma.ReferenceCreateManyArgs<ExtArgs>
+            result: BatchPayload
+          }
+          delete: {
+            args: Prisma.ReferenceDeleteArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$ReferencePayload>
+          }
+          update: {
+            args: Prisma.ReferenceUpdateArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$ReferencePayload>
+          }
+          deleteMany: {
+            args: Prisma.ReferenceDeleteManyArgs<ExtArgs>
+            result: BatchPayload
+          }
+          updateMany: {
+            args: Prisma.ReferenceUpdateManyArgs<ExtArgs>
+            result: BatchPayload
+          }
+          upsert: {
+            args: Prisma.ReferenceUpsertArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$ReferencePayload>
+          }
+          aggregate: {
+            args: Prisma.ReferenceAggregateArgs<ExtArgs>
+            result: $Utils.Optional<AggregateReference>
+          }
+          groupBy: {
+            args: Prisma.ReferenceGroupByArgs<ExtArgs>
+            result: $Utils.Optional<ReferenceGroupByOutputType>[]
+          }
+          count: {
+            args: Prisma.ReferenceCountArgs<ExtArgs>
+            result: $Utils.Optional<ReferenceCountAggregateOutputType> | number
+          }
+        }
+      }
     }
   } & {
     other: {
@@ -1437,6 +1519,7 @@ export namespace Prisma {
     activity?: ActivityOmit
     lead?: LeadOmit
     auditLog?: AuditLogOmit
+    reference?: ReferenceOmit
   }
 
   /* Types for Logging */
@@ -1660,6 +1743,46 @@ export namespace Prisma {
    */
   export type RenewalCountOutputTypeCountActivitiesArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     where?: ActivityWhereInput
+  }
+
+
+  /**
+   * Count Type ReferenceCountOutputType
+   */
+
+  export type ReferenceCountOutputType = {
+    clients: number
+    policies: number
+  }
+
+  export type ReferenceCountOutputTypeSelect<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    clients?: boolean | ReferenceCountOutputTypeCountClientsArgs
+    policies?: boolean | ReferenceCountOutputTypeCountPoliciesArgs
+  }
+
+  // Custom InputTypes
+  /**
+   * ReferenceCountOutputType without action
+   */
+  export type ReferenceCountOutputTypeDefaultArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the ReferenceCountOutputType
+     */
+    select?: ReferenceCountOutputTypeSelect<ExtArgs> | null
+  }
+
+  /**
+   * ReferenceCountOutputType without action
+   */
+  export type ReferenceCountOutputTypeCountClientsArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    where?: ClientWhereInput
+  }
+
+  /**
+   * ReferenceCountOutputType without action
+   */
+  export type ReferenceCountOutputTypeCountPoliciesArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    where?: PolicyWhereInput
   }
 
 
@@ -2689,6 +2812,7 @@ export namespace Prisma {
     name: string | null
     kycStatus: string | null
     notes: string | null
+    referenceId: string | null
     createdAt: Date | null
     updatedAt: Date | null
   }
@@ -2700,6 +2824,7 @@ export namespace Prisma {
     name: string | null
     kycStatus: string | null
     notes: string | null
+    referenceId: string | null
     createdAt: Date | null
     updatedAt: Date | null
   }
@@ -2711,6 +2836,7 @@ export namespace Prisma {
     name: number
     kycStatus: number
     notes: number
+    referenceId: number
     createdAt: number
     updatedAt: number
     _all: number
@@ -2724,6 +2850,7 @@ export namespace Prisma {
     name?: true
     kycStatus?: true
     notes?: true
+    referenceId?: true
     createdAt?: true
     updatedAt?: true
   }
@@ -2735,6 +2862,7 @@ export namespace Prisma {
     name?: true
     kycStatus?: true
     notes?: true
+    referenceId?: true
     createdAt?: true
     updatedAt?: true
   }
@@ -2746,6 +2874,7 @@ export namespace Prisma {
     name?: true
     kycStatus?: true
     notes?: true
+    referenceId?: true
     createdAt?: true
     updatedAt?: true
     _all?: true
@@ -2830,6 +2959,7 @@ export namespace Prisma {
     name: string
     kycStatus: string | null
     notes: string | null
+    referenceId: string | null
     createdAt: Date
     updatedAt: Date
     _count: ClientCountAggregateOutputType | null
@@ -2858,8 +2988,10 @@ export namespace Prisma {
     name?: boolean
     kycStatus?: boolean
     notes?: boolean
+    referenceId?: boolean
     createdAt?: boolean
     updatedAt?: boolean
+    reference?: boolean | Client$referenceArgs<ExtArgs>
     policies?: boolean | Client$policiesArgs<ExtArgs>
     documents?: boolean | Client$documentsArgs<ExtArgs>
     _count?: boolean | ClientCountOutputTypeDefaultArgs<ExtArgs>
@@ -2874,12 +3006,14 @@ export namespace Prisma {
     name?: boolean
     kycStatus?: boolean
     notes?: boolean
+    referenceId?: boolean
     createdAt?: boolean
     updatedAt?: boolean
   }
 
-  export type ClientOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "email" | "mobile" | "name" | "kycStatus" | "notes" | "createdAt" | "updatedAt", ExtArgs["result"]["client"]>
+  export type ClientOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "email" | "mobile" | "name" | "kycStatus" | "notes" | "referenceId" | "createdAt" | "updatedAt", ExtArgs["result"]["client"]>
   export type ClientInclude<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    reference?: boolean | Client$referenceArgs<ExtArgs>
     policies?: boolean | Client$policiesArgs<ExtArgs>
     documents?: boolean | Client$documentsArgs<ExtArgs>
     _count?: boolean | ClientCountOutputTypeDefaultArgs<ExtArgs>
@@ -2888,6 +3022,7 @@ export namespace Prisma {
   export type $ClientPayload<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     name: "Client"
     objects: {
+      reference: Prisma.$ReferencePayload<ExtArgs> | null
       policies: Prisma.$PolicyPayload<ExtArgs>[]
       documents: Prisma.$DocumentPayload<ExtArgs>[]
     }
@@ -2898,6 +3033,7 @@ export namespace Prisma {
       name: string
       kycStatus: string | null
       notes: string | null
+      referenceId: string | null
       createdAt: Date
       updatedAt: Date
     }, ExtArgs["result"]["client"]>
@@ -3240,6 +3376,7 @@ export namespace Prisma {
    */
   export interface Prisma__ClientClient<T, Null = never, ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs, GlobalOmitOptions = {}> extends Prisma.PrismaPromise<T> {
     readonly [Symbol.toStringTag]: "PrismaPromise"
+    reference<T extends Client$referenceArgs<ExtArgs> = {}>(args?: Subset<T, Client$referenceArgs<ExtArgs>>): Prisma__ReferenceClient<$Result.GetResult<Prisma.$ReferencePayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
     policies<T extends Client$policiesArgs<ExtArgs> = {}>(args?: Subset<T, Client$policiesArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$PolicyPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
     documents<T extends Client$documentsArgs<ExtArgs> = {}>(args?: Subset<T, Client$documentsArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$DocumentPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
     /**
@@ -3277,6 +3414,7 @@ export namespace Prisma {
     readonly name: FieldRef<"Client", 'String'>
     readonly kycStatus: FieldRef<"Client", 'String'>
     readonly notes: FieldRef<"Client", 'String'>
+    readonly referenceId: FieldRef<"Client", 'String'>
     readonly createdAt: FieldRef<"Client", 'DateTime'>
     readonly updatedAt: FieldRef<"Client", 'DateTime'>
   }
@@ -3619,6 +3757,25 @@ export namespace Prisma {
      * Limit how many Clients to delete.
      */
     limit?: number
+  }
+
+  /**
+   * Client.reference
+   */
+  export type Client$referenceArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the Reference
+     */
+    select?: ReferenceSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the Reference
+     */
+    omit?: ReferenceOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: ReferenceInclude<ExtArgs> | null
+    where?: ReferenceWhereInput
   }
 
   /**
@@ -4099,6 +4256,7 @@ export namespace Prisma {
     createdAt?: boolean
     updatedAt?: boolean
     client?: boolean | ClientDefaultArgs<ExtArgs>
+    reference?: boolean | Policy$referenceArgs<ExtArgs>
     renewals?: boolean | Policy$renewalsArgs<ExtArgs>
     documents?: boolean | Policy$documentsArgs<ExtArgs>
     _count?: boolean | PolicyCountOutputTypeDefaultArgs<ExtArgs>
@@ -4140,6 +4298,7 @@ export namespace Prisma {
   export type PolicyOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "policyNo" | "clientId" | "type" | "insurer" | "premium" | "premiumPaid" | "paymentStatus" | "premiumMode" | "startDate" | "expiryDate" | "status" | "attachments" | "tenureType" | "tenureMonths" | "customTenureMonths" | "nextRenewalDate" | "vehicleNo" | "extras" | "earnedPremium" | "epAmount" | "ppt" | "pt" | "notes" | "referenceId" | "assignedTo" | "createdAt" | "updatedAt", ExtArgs["result"]["policy"]>
   export type PolicyInclude<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     client?: boolean | ClientDefaultArgs<ExtArgs>
+    reference?: boolean | Policy$referenceArgs<ExtArgs>
     renewals?: boolean | Policy$renewalsArgs<ExtArgs>
     documents?: boolean | Policy$documentsArgs<ExtArgs>
     _count?: boolean | PolicyCountOutputTypeDefaultArgs<ExtArgs>
@@ -4149,6 +4308,7 @@ export namespace Prisma {
     name: "Policy"
     objects: {
       client: Prisma.$ClientPayload<ExtArgs>
+      reference: Prisma.$ReferencePayload<ExtArgs> | null
       renewals: Prisma.$RenewalPayload<ExtArgs>[]
       documents: Prisma.$DocumentPayload<ExtArgs>[]
     }
@@ -4522,6 +4682,7 @@ export namespace Prisma {
   export interface Prisma__PolicyClient<T, Null = never, ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs, GlobalOmitOptions = {}> extends Prisma.PrismaPromise<T> {
     readonly [Symbol.toStringTag]: "PrismaPromise"
     client<T extends ClientDefaultArgs<ExtArgs> = {}>(args?: Subset<T, ClientDefaultArgs<ExtArgs>>): Prisma__ClientClient<$Result.GetResult<Prisma.$ClientPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | Null, Null, ExtArgs, GlobalOmitOptions>
+    reference<T extends Policy$referenceArgs<ExtArgs> = {}>(args?: Subset<T, Policy$referenceArgs<ExtArgs>>): Prisma__ReferenceClient<$Result.GetResult<Prisma.$ReferencePayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
     renewals<T extends Policy$renewalsArgs<ExtArgs> = {}>(args?: Subset<T, Policy$renewalsArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$RenewalPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
     documents<T extends Policy$documentsArgs<ExtArgs> = {}>(args?: Subset<T, Policy$documentsArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$DocumentPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
     /**
@@ -4921,6 +5082,25 @@ export namespace Prisma {
      * Limit how many Policies to delete.
      */
     limit?: number
+  }
+
+  /**
+   * Policy.reference
+   */
+  export type Policy$referenceArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the Reference
+     */
+    select?: ReferenceSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the Reference
+     */
+    omit?: ReferenceOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: ReferenceInclude<ExtArgs> | null
+    where?: ReferenceWhereInput
   }
 
   /**
@@ -10791,6 +10971,1022 @@ export namespace Prisma {
 
 
   /**
+   * Model Reference
+   */
+
+  export type AggregateReference = {
+    _count: ReferenceCountAggregateOutputType | null
+    _min: ReferenceMinAggregateOutputType | null
+    _max: ReferenceMaxAggregateOutputType | null
+  }
+
+  export type ReferenceMinAggregateOutputType = {
+    id: string | null
+    type: string | null
+    name: string | null
+    contact: string | null
+    status: string | null
+    code: string | null
+    createdAt: Date | null
+    updatedAt: Date | null
+  }
+
+  export type ReferenceMaxAggregateOutputType = {
+    id: string | null
+    type: string | null
+    name: string | null
+    contact: string | null
+    status: string | null
+    code: string | null
+    createdAt: Date | null
+    updatedAt: Date | null
+  }
+
+  export type ReferenceCountAggregateOutputType = {
+    id: number
+    type: number
+    name: number
+    contact: number
+    status: number
+    code: number
+    createdAt: number
+    updatedAt: number
+    _all: number
+  }
+
+
+  export type ReferenceMinAggregateInputType = {
+    id?: true
+    type?: true
+    name?: true
+    contact?: true
+    status?: true
+    code?: true
+    createdAt?: true
+    updatedAt?: true
+  }
+
+  export type ReferenceMaxAggregateInputType = {
+    id?: true
+    type?: true
+    name?: true
+    contact?: true
+    status?: true
+    code?: true
+    createdAt?: true
+    updatedAt?: true
+  }
+
+  export type ReferenceCountAggregateInputType = {
+    id?: true
+    type?: true
+    name?: true
+    contact?: true
+    status?: true
+    code?: true
+    createdAt?: true
+    updatedAt?: true
+    _all?: true
+  }
+
+  export type ReferenceAggregateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Filter which Reference to aggregate.
+     */
+    where?: ReferenceWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of References to fetch.
+     */
+    orderBy?: ReferenceOrderByWithRelationInput | ReferenceOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the start position
+     */
+    cursor?: ReferenceWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` References from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` References.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Count returned References
+    **/
+    _count?: true | ReferenceCountAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to find the minimum value
+    **/
+    _min?: ReferenceMinAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to find the maximum value
+    **/
+    _max?: ReferenceMaxAggregateInputType
+  }
+
+  export type GetReferenceAggregateType<T extends ReferenceAggregateArgs> = {
+        [P in keyof T & keyof AggregateReference]: P extends '_count' | 'count'
+      ? T[P] extends true
+        ? number
+        : GetScalarType<T[P], AggregateReference[P]>
+      : GetScalarType<T[P], AggregateReference[P]>
+  }
+
+
+
+
+  export type ReferenceGroupByArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    where?: ReferenceWhereInput
+    orderBy?: ReferenceOrderByWithAggregationInput | ReferenceOrderByWithAggregationInput[]
+    by: ReferenceScalarFieldEnum[] | ReferenceScalarFieldEnum
+    having?: ReferenceScalarWhereWithAggregatesInput
+    take?: number
+    skip?: number
+    _count?: ReferenceCountAggregateInputType | true
+    _min?: ReferenceMinAggregateInputType
+    _max?: ReferenceMaxAggregateInputType
+  }
+
+  export type ReferenceGroupByOutputType = {
+    id: string
+    type: string
+    name: string
+    contact: string | null
+    status: string
+    code: string | null
+    createdAt: Date
+    updatedAt: Date
+    _count: ReferenceCountAggregateOutputType | null
+    _min: ReferenceMinAggregateOutputType | null
+    _max: ReferenceMaxAggregateOutputType | null
+  }
+
+  type GetReferenceGroupByPayload<T extends ReferenceGroupByArgs> = Prisma.PrismaPromise<
+    Array<
+      PickEnumerable<ReferenceGroupByOutputType, T['by']> &
+        {
+          [P in ((keyof T) & (keyof ReferenceGroupByOutputType))]: P extends '_count'
+            ? T[P] extends boolean
+              ? number
+              : GetScalarType<T[P], ReferenceGroupByOutputType[P]>
+            : GetScalarType<T[P], ReferenceGroupByOutputType[P]>
+        }
+      >
+    >
+
+
+  export type ReferenceSelect<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
+    id?: boolean
+    type?: boolean
+    name?: boolean
+    contact?: boolean
+    status?: boolean
+    code?: boolean
+    createdAt?: boolean
+    updatedAt?: boolean
+    clients?: boolean | Reference$clientsArgs<ExtArgs>
+    policies?: boolean | Reference$policiesArgs<ExtArgs>
+    _count?: boolean | ReferenceCountOutputTypeDefaultArgs<ExtArgs>
+  }, ExtArgs["result"]["reference"]>
+
+
+
+  export type ReferenceSelectScalar = {
+    id?: boolean
+    type?: boolean
+    name?: boolean
+    contact?: boolean
+    status?: boolean
+    code?: boolean
+    createdAt?: boolean
+    updatedAt?: boolean
+  }
+
+  export type ReferenceOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "type" | "name" | "contact" | "status" | "code" | "createdAt" | "updatedAt", ExtArgs["result"]["reference"]>
+  export type ReferenceInclude<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    clients?: boolean | Reference$clientsArgs<ExtArgs>
+    policies?: boolean | Reference$policiesArgs<ExtArgs>
+    _count?: boolean | ReferenceCountOutputTypeDefaultArgs<ExtArgs>
+  }
+
+  export type $ReferencePayload<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    name: "Reference"
+    objects: {
+      clients: Prisma.$ClientPayload<ExtArgs>[]
+      policies: Prisma.$PolicyPayload<ExtArgs>[]
+    }
+    scalars: $Extensions.GetPayloadResult<{
+      id: string
+      type: string
+      name: string
+      contact: string | null
+      status: string
+      code: string | null
+      createdAt: Date
+      updatedAt: Date
+    }, ExtArgs["result"]["reference"]>
+    composites: {}
+  }
+
+  type ReferenceGetPayload<S extends boolean | null | undefined | ReferenceDefaultArgs> = $Result.GetResult<Prisma.$ReferencePayload, S>
+
+  type ReferenceCountArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> =
+    Omit<ReferenceFindManyArgs, 'select' | 'include' | 'distinct' | 'omit'> & {
+      select?: ReferenceCountAggregateInputType | true
+    }
+
+  export interface ReferenceDelegate<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs, GlobalOmitOptions = {}> {
+    [K: symbol]: { types: Prisma.TypeMap<ExtArgs>['model']['Reference'], meta: { name: 'Reference' } }
+    /**
+     * Find zero or one Reference that matches the filter.
+     * @param {ReferenceFindUniqueArgs} args - Arguments to find a Reference
+     * @example
+     * // Get one Reference
+     * const reference = await prisma.reference.findUnique({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findUnique<T extends ReferenceFindUniqueArgs>(args: SelectSubset<T, ReferenceFindUniqueArgs<ExtArgs>>): Prisma__ReferenceClient<$Result.GetResult<Prisma.$ReferencePayload<ExtArgs>, T, "findUnique", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Find one Reference that matches the filter or throw an error with `error.code='P2025'`
+     * if no matches were found.
+     * @param {ReferenceFindUniqueOrThrowArgs} args - Arguments to find a Reference
+     * @example
+     * // Get one Reference
+     * const reference = await prisma.reference.findUniqueOrThrow({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findUniqueOrThrow<T extends ReferenceFindUniqueOrThrowArgs>(args: SelectSubset<T, ReferenceFindUniqueOrThrowArgs<ExtArgs>>): Prisma__ReferenceClient<$Result.GetResult<Prisma.$ReferencePayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Find the first Reference that matches the filter.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {ReferenceFindFirstArgs} args - Arguments to find a Reference
+     * @example
+     * // Get one Reference
+     * const reference = await prisma.reference.findFirst({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findFirst<T extends ReferenceFindFirstArgs>(args?: SelectSubset<T, ReferenceFindFirstArgs<ExtArgs>>): Prisma__ReferenceClient<$Result.GetResult<Prisma.$ReferencePayload<ExtArgs>, T, "findFirst", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Find the first Reference that matches the filter or
+     * throw `PrismaKnownClientError` with `P2025` code if no matches were found.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {ReferenceFindFirstOrThrowArgs} args - Arguments to find a Reference
+     * @example
+     * // Get one Reference
+     * const reference = await prisma.reference.findFirstOrThrow({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findFirstOrThrow<T extends ReferenceFindFirstOrThrowArgs>(args?: SelectSubset<T, ReferenceFindFirstOrThrowArgs<ExtArgs>>): Prisma__ReferenceClient<$Result.GetResult<Prisma.$ReferencePayload<ExtArgs>, T, "findFirstOrThrow", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Find zero or more References that matches the filter.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {ReferenceFindManyArgs} args - Arguments to filter and select certain fields only.
+     * @example
+     * // Get all References
+     * const references = await prisma.reference.findMany()
+     * 
+     * // Get first 10 References
+     * const references = await prisma.reference.findMany({ take: 10 })
+     * 
+     * // Only select the `id`
+     * const referenceWithIdOnly = await prisma.reference.findMany({ select: { id: true } })
+     * 
+     */
+    findMany<T extends ReferenceFindManyArgs>(args?: SelectSubset<T, ReferenceFindManyArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$ReferencePayload<ExtArgs>, T, "findMany", GlobalOmitOptions>>
+
+    /**
+     * Create a Reference.
+     * @param {ReferenceCreateArgs} args - Arguments to create a Reference.
+     * @example
+     * // Create one Reference
+     * const Reference = await prisma.reference.create({
+     *   data: {
+     *     // ... data to create a Reference
+     *   }
+     * })
+     * 
+     */
+    create<T extends ReferenceCreateArgs>(args: SelectSubset<T, ReferenceCreateArgs<ExtArgs>>): Prisma__ReferenceClient<$Result.GetResult<Prisma.$ReferencePayload<ExtArgs>, T, "create", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Create many References.
+     * @param {ReferenceCreateManyArgs} args - Arguments to create many References.
+     * @example
+     * // Create many References
+     * const reference = await prisma.reference.createMany({
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     *     
+     */
+    createMany<T extends ReferenceCreateManyArgs>(args?: SelectSubset<T, ReferenceCreateManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Delete a Reference.
+     * @param {ReferenceDeleteArgs} args - Arguments to delete one Reference.
+     * @example
+     * // Delete one Reference
+     * const Reference = await prisma.reference.delete({
+     *   where: {
+     *     // ... filter to delete one Reference
+     *   }
+     * })
+     * 
+     */
+    delete<T extends ReferenceDeleteArgs>(args: SelectSubset<T, ReferenceDeleteArgs<ExtArgs>>): Prisma__ReferenceClient<$Result.GetResult<Prisma.$ReferencePayload<ExtArgs>, T, "delete", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Update one Reference.
+     * @param {ReferenceUpdateArgs} args - Arguments to update one Reference.
+     * @example
+     * // Update one Reference
+     * const reference = await prisma.reference.update({
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: {
+     *     // ... provide data here
+     *   }
+     * })
+     * 
+     */
+    update<T extends ReferenceUpdateArgs>(args: SelectSubset<T, ReferenceUpdateArgs<ExtArgs>>): Prisma__ReferenceClient<$Result.GetResult<Prisma.$ReferencePayload<ExtArgs>, T, "update", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Delete zero or more References.
+     * @param {ReferenceDeleteManyArgs} args - Arguments to filter References to delete.
+     * @example
+     * // Delete a few References
+     * const { count } = await prisma.reference.deleteMany({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     * 
+     */
+    deleteMany<T extends ReferenceDeleteManyArgs>(args?: SelectSubset<T, ReferenceDeleteManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Update zero or more References.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {ReferenceUpdateManyArgs} args - Arguments to update one or more rows.
+     * @example
+     * // Update many References
+     * const reference = await prisma.reference.updateMany({
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: {
+     *     // ... provide data here
+     *   }
+     * })
+     * 
+     */
+    updateMany<T extends ReferenceUpdateManyArgs>(args: SelectSubset<T, ReferenceUpdateManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Create or update one Reference.
+     * @param {ReferenceUpsertArgs} args - Arguments to update or create a Reference.
+     * @example
+     * // Update or create a Reference
+     * const reference = await prisma.reference.upsert({
+     *   create: {
+     *     // ... data to create a Reference
+     *   },
+     *   update: {
+     *     // ... in case it already exists, update
+     *   },
+     *   where: {
+     *     // ... the filter for the Reference we want to update
+     *   }
+     * })
+     */
+    upsert<T extends ReferenceUpsertArgs>(args: SelectSubset<T, ReferenceUpsertArgs<ExtArgs>>): Prisma__ReferenceClient<$Result.GetResult<Prisma.$ReferencePayload<ExtArgs>, T, "upsert", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+
+    /**
+     * Count the number of References.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {ReferenceCountArgs} args - Arguments to filter References to count.
+     * @example
+     * // Count the number of References
+     * const count = await prisma.reference.count({
+     *   where: {
+     *     // ... the filter for the References we want to count
+     *   }
+     * })
+    **/
+    count<T extends ReferenceCountArgs>(
+      args?: Subset<T, ReferenceCountArgs>,
+    ): Prisma.PrismaPromise<
+      T extends $Utils.Record<'select', any>
+        ? T['select'] extends true
+          ? number
+          : GetScalarType<T['select'], ReferenceCountAggregateOutputType>
+        : number
+    >
+
+    /**
+     * Allows you to perform aggregations operations on a Reference.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {ReferenceAggregateArgs} args - Select which aggregations you would like to apply and on what fields.
+     * @example
+     * // Ordered by age ascending
+     * // Where email contains prisma.io
+     * // Limited to the 10 users
+     * const aggregations = await prisma.user.aggregate({
+     *   _avg: {
+     *     age: true,
+     *   },
+     *   where: {
+     *     email: {
+     *       contains: "prisma.io",
+     *     },
+     *   },
+     *   orderBy: {
+     *     age: "asc",
+     *   },
+     *   take: 10,
+     * })
+    **/
+    aggregate<T extends ReferenceAggregateArgs>(args: Subset<T, ReferenceAggregateArgs>): Prisma.PrismaPromise<GetReferenceAggregateType<T>>
+
+    /**
+     * Group by Reference.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {ReferenceGroupByArgs} args - Group by arguments.
+     * @example
+     * // Group by city, order by createdAt, get count
+     * const result = await prisma.user.groupBy({
+     *   by: ['city', 'createdAt'],
+     *   orderBy: {
+     *     createdAt: true
+     *   },
+     *   _count: {
+     *     _all: true
+     *   },
+     * })
+     * 
+    **/
+    groupBy<
+      T extends ReferenceGroupByArgs,
+      HasSelectOrTake extends Or<
+        Extends<'skip', Keys<T>>,
+        Extends<'take', Keys<T>>
+      >,
+      OrderByArg extends True extends HasSelectOrTake
+        ? { orderBy: ReferenceGroupByArgs['orderBy'] }
+        : { orderBy?: ReferenceGroupByArgs['orderBy'] },
+      OrderFields extends ExcludeUnderscoreKeys<Keys<MaybeTupleToUnion<T['orderBy']>>>,
+      ByFields extends MaybeTupleToUnion<T['by']>,
+      ByValid extends Has<ByFields, OrderFields>,
+      HavingFields extends GetHavingFields<T['having']>,
+      HavingValid extends Has<ByFields, HavingFields>,
+      ByEmpty extends T['by'] extends never[] ? True : False,
+      InputErrors extends ByEmpty extends True
+      ? `Error: "by" must not be empty.`
+      : HavingValid extends False
+      ? {
+          [P in HavingFields]: P extends ByFields
+            ? never
+            : P extends string
+            ? `Error: Field "${P}" used in "having" needs to be provided in "by".`
+            : [
+                Error,
+                'Field ',
+                P,
+                ` in "having" needs to be provided in "by"`,
+              ]
+        }[HavingFields]
+      : 'take' extends Keys<T>
+      ? 'orderBy' extends Keys<T>
+        ? ByValid extends True
+          ? {}
+          : {
+              [P in OrderFields]: P extends ByFields
+                ? never
+                : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+            }[OrderFields]
+        : 'Error: If you provide "take", you also need to provide "orderBy"'
+      : 'skip' extends Keys<T>
+      ? 'orderBy' extends Keys<T>
+        ? ByValid extends True
+          ? {}
+          : {
+              [P in OrderFields]: P extends ByFields
+                ? never
+                : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+            }[OrderFields]
+        : 'Error: If you provide "skip", you also need to provide "orderBy"'
+      : ByValid extends True
+      ? {}
+      : {
+          [P in OrderFields]: P extends ByFields
+            ? never
+            : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+        }[OrderFields]
+    >(args: SubsetIntersection<T, ReferenceGroupByArgs, OrderByArg> & InputErrors): {} extends InputErrors ? GetReferenceGroupByPayload<T> : Prisma.PrismaPromise<InputErrors>
+  /**
+   * Fields of the Reference model
+   */
+  readonly fields: ReferenceFieldRefs;
+  }
+
+  /**
+   * The delegate class that acts as a "Promise-like" for Reference.
+   * Why is this prefixed with `Prisma__`?
+   * Because we want to prevent naming conflicts as mentioned in
+   * https://github.com/prisma/prisma-client-js/issues/707
+   */
+  export interface Prisma__ReferenceClient<T, Null = never, ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs, GlobalOmitOptions = {}> extends Prisma.PrismaPromise<T> {
+    readonly [Symbol.toStringTag]: "PrismaPromise"
+    clients<T extends Reference$clientsArgs<ExtArgs> = {}>(args?: Subset<T, Reference$clientsArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$ClientPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
+    policies<T extends Reference$policiesArgs<ExtArgs> = {}>(args?: Subset<T, Reference$policiesArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$PolicyPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
+    /**
+     * Attaches callbacks for the resolution and/or rejection of the Promise.
+     * @param onfulfilled The callback to execute when the Promise is resolved.
+     * @param onrejected The callback to execute when the Promise is rejected.
+     * @returns A Promise for the completion of which ever callback is executed.
+     */
+    then<TResult1 = T, TResult2 = never>(onfulfilled?: ((value: T) => TResult1 | PromiseLike<TResult1>) | undefined | null, onrejected?: ((reason: any) => TResult2 | PromiseLike<TResult2>) | undefined | null): $Utils.JsPromise<TResult1 | TResult2>
+    /**
+     * Attaches a callback for only the rejection of the Promise.
+     * @param onrejected The callback to execute when the Promise is rejected.
+     * @returns A Promise for the completion of the callback.
+     */
+    catch<TResult = never>(onrejected?: ((reason: any) => TResult | PromiseLike<TResult>) | undefined | null): $Utils.JsPromise<T | TResult>
+    /**
+     * Attaches a callback that is invoked when the Promise is settled (fulfilled or rejected). The
+     * resolved value cannot be modified from the callback.
+     * @param onfinally The callback to execute when the Promise is settled (fulfilled or rejected).
+     * @returns A Promise for the completion of the callback.
+     */
+    finally(onfinally?: (() => void) | undefined | null): $Utils.JsPromise<T>
+  }
+
+
+
+
+  /**
+   * Fields of the Reference model
+   */
+  interface ReferenceFieldRefs {
+    readonly id: FieldRef<"Reference", 'String'>
+    readonly type: FieldRef<"Reference", 'String'>
+    readonly name: FieldRef<"Reference", 'String'>
+    readonly contact: FieldRef<"Reference", 'String'>
+    readonly status: FieldRef<"Reference", 'String'>
+    readonly code: FieldRef<"Reference", 'String'>
+    readonly createdAt: FieldRef<"Reference", 'DateTime'>
+    readonly updatedAt: FieldRef<"Reference", 'DateTime'>
+  }
+    
+
+  // Custom InputTypes
+  /**
+   * Reference findUnique
+   */
+  export type ReferenceFindUniqueArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the Reference
+     */
+    select?: ReferenceSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the Reference
+     */
+    omit?: ReferenceOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: ReferenceInclude<ExtArgs> | null
+    /**
+     * Filter, which Reference to fetch.
+     */
+    where: ReferenceWhereUniqueInput
+  }
+
+  /**
+   * Reference findUniqueOrThrow
+   */
+  export type ReferenceFindUniqueOrThrowArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the Reference
+     */
+    select?: ReferenceSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the Reference
+     */
+    omit?: ReferenceOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: ReferenceInclude<ExtArgs> | null
+    /**
+     * Filter, which Reference to fetch.
+     */
+    where: ReferenceWhereUniqueInput
+  }
+
+  /**
+   * Reference findFirst
+   */
+  export type ReferenceFindFirstArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the Reference
+     */
+    select?: ReferenceSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the Reference
+     */
+    omit?: ReferenceOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: ReferenceInclude<ExtArgs> | null
+    /**
+     * Filter, which Reference to fetch.
+     */
+    where?: ReferenceWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of References to fetch.
+     */
+    orderBy?: ReferenceOrderByWithRelationInput | ReferenceOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for searching for References.
+     */
+    cursor?: ReferenceWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` References from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` References.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
+     * 
+     * Filter by unique combinations of References.
+     */
+    distinct?: ReferenceScalarFieldEnum | ReferenceScalarFieldEnum[]
+  }
+
+  /**
+   * Reference findFirstOrThrow
+   */
+  export type ReferenceFindFirstOrThrowArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the Reference
+     */
+    select?: ReferenceSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the Reference
+     */
+    omit?: ReferenceOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: ReferenceInclude<ExtArgs> | null
+    /**
+     * Filter, which Reference to fetch.
+     */
+    where?: ReferenceWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of References to fetch.
+     */
+    orderBy?: ReferenceOrderByWithRelationInput | ReferenceOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for searching for References.
+     */
+    cursor?: ReferenceWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` References from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` References.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
+     * 
+     * Filter by unique combinations of References.
+     */
+    distinct?: ReferenceScalarFieldEnum | ReferenceScalarFieldEnum[]
+  }
+
+  /**
+   * Reference findMany
+   */
+  export type ReferenceFindManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the Reference
+     */
+    select?: ReferenceSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the Reference
+     */
+    omit?: ReferenceOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: ReferenceInclude<ExtArgs> | null
+    /**
+     * Filter, which References to fetch.
+     */
+    where?: ReferenceWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of References to fetch.
+     */
+    orderBy?: ReferenceOrderByWithRelationInput | ReferenceOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for listing References.
+     */
+    cursor?: ReferenceWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` References from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` References.
+     */
+    skip?: number
+    distinct?: ReferenceScalarFieldEnum | ReferenceScalarFieldEnum[]
+  }
+
+  /**
+   * Reference create
+   */
+  export type ReferenceCreateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the Reference
+     */
+    select?: ReferenceSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the Reference
+     */
+    omit?: ReferenceOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: ReferenceInclude<ExtArgs> | null
+    /**
+     * The data needed to create a Reference.
+     */
+    data: XOR<ReferenceCreateInput, ReferenceUncheckedCreateInput>
+  }
+
+  /**
+   * Reference createMany
+   */
+  export type ReferenceCreateManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * The data used to create many References.
+     */
+    data: ReferenceCreateManyInput | ReferenceCreateManyInput[]
+    skipDuplicates?: boolean
+  }
+
+  /**
+   * Reference update
+   */
+  export type ReferenceUpdateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the Reference
+     */
+    select?: ReferenceSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the Reference
+     */
+    omit?: ReferenceOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: ReferenceInclude<ExtArgs> | null
+    /**
+     * The data needed to update a Reference.
+     */
+    data: XOR<ReferenceUpdateInput, ReferenceUncheckedUpdateInput>
+    /**
+     * Choose, which Reference to update.
+     */
+    where: ReferenceWhereUniqueInput
+  }
+
+  /**
+   * Reference updateMany
+   */
+  export type ReferenceUpdateManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * The data used to update References.
+     */
+    data: XOR<ReferenceUpdateManyMutationInput, ReferenceUncheckedUpdateManyInput>
+    /**
+     * Filter which References to update
+     */
+    where?: ReferenceWhereInput
+    /**
+     * Limit how many References to update.
+     */
+    limit?: number
+  }
+
+  /**
+   * Reference upsert
+   */
+  export type ReferenceUpsertArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the Reference
+     */
+    select?: ReferenceSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the Reference
+     */
+    omit?: ReferenceOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: ReferenceInclude<ExtArgs> | null
+    /**
+     * The filter to search for the Reference to update in case it exists.
+     */
+    where: ReferenceWhereUniqueInput
+    /**
+     * In case the Reference found by the `where` argument doesn't exist, create a new Reference with this data.
+     */
+    create: XOR<ReferenceCreateInput, ReferenceUncheckedCreateInput>
+    /**
+     * In case the Reference was found with the provided `where` argument, update it with this data.
+     */
+    update: XOR<ReferenceUpdateInput, ReferenceUncheckedUpdateInput>
+  }
+
+  /**
+   * Reference delete
+   */
+  export type ReferenceDeleteArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the Reference
+     */
+    select?: ReferenceSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the Reference
+     */
+    omit?: ReferenceOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: ReferenceInclude<ExtArgs> | null
+    /**
+     * Filter which Reference to delete.
+     */
+    where: ReferenceWhereUniqueInput
+  }
+
+  /**
+   * Reference deleteMany
+   */
+  export type ReferenceDeleteManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Filter which References to delete
+     */
+    where?: ReferenceWhereInput
+    /**
+     * Limit how many References to delete.
+     */
+    limit?: number
+  }
+
+  /**
+   * Reference.clients
+   */
+  export type Reference$clientsArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the Client
+     */
+    select?: ClientSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the Client
+     */
+    omit?: ClientOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: ClientInclude<ExtArgs> | null
+    where?: ClientWhereInput
+    orderBy?: ClientOrderByWithRelationInput | ClientOrderByWithRelationInput[]
+    cursor?: ClientWhereUniqueInput
+    take?: number
+    skip?: number
+    distinct?: ClientScalarFieldEnum | ClientScalarFieldEnum[]
+  }
+
+  /**
+   * Reference.policies
+   */
+  export type Reference$policiesArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the Policy
+     */
+    select?: PolicySelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the Policy
+     */
+    omit?: PolicyOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: PolicyInclude<ExtArgs> | null
+    where?: PolicyWhereInput
+    orderBy?: PolicyOrderByWithRelationInput | PolicyOrderByWithRelationInput[]
+    cursor?: PolicyWhereUniqueInput
+    take?: number
+    skip?: number
+    distinct?: PolicyScalarFieldEnum | PolicyScalarFieldEnum[]
+  }
+
+  /**
+   * Reference without action
+   */
+  export type ReferenceDefaultArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the Reference
+     */
+    select?: ReferenceSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the Reference
+     */
+    omit?: ReferenceOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: ReferenceInclude<ExtArgs> | null
+  }
+
+
+  /**
    * Enums
    */
 
@@ -10824,6 +12020,7 @@ export namespace Prisma {
     name: 'name',
     kycStatus: 'kycStatus',
     notes: 'notes',
+    referenceId: 'referenceId',
     createdAt: 'createdAt',
     updatedAt: 'updatedAt'
   };
@@ -10947,6 +12144,20 @@ export namespace Prisma {
   export type AuditLogScalarFieldEnum = (typeof AuditLogScalarFieldEnum)[keyof typeof AuditLogScalarFieldEnum]
 
 
+  export const ReferenceScalarFieldEnum: {
+    id: 'id',
+    type: 'type',
+    name: 'name',
+    contact: 'contact',
+    status: 'status',
+    code: 'code',
+    createdAt: 'createdAt',
+    updatedAt: 'updatedAt'
+  };
+
+  export type ReferenceScalarFieldEnum = (typeof ReferenceScalarFieldEnum)[keyof typeof ReferenceScalarFieldEnum]
+
+
   export const SortOrder: {
     asc: 'asc',
     desc: 'desc'
@@ -10980,7 +12191,8 @@ export namespace Prisma {
     mobile: 'mobile',
     name: 'name',
     kycStatus: 'kycStatus',
-    notes: 'notes'
+    notes: 'notes',
+    referenceId: 'referenceId'
   };
 
   export type ClientOrderByRelevanceFieldEnum = (typeof ClientOrderByRelevanceFieldEnum)[keyof typeof ClientOrderByRelevanceFieldEnum]
@@ -11074,6 +12286,18 @@ export namespace Prisma {
   };
 
   export type AuditLogOrderByRelevanceFieldEnum = (typeof AuditLogOrderByRelevanceFieldEnum)[keyof typeof AuditLogOrderByRelevanceFieldEnum]
+
+
+  export const ReferenceOrderByRelevanceFieldEnum: {
+    id: 'id',
+    type: 'type',
+    name: 'name',
+    contact: 'contact',
+    status: 'status',
+    code: 'code'
+  };
+
+  export type ReferenceOrderByRelevanceFieldEnum = (typeof ReferenceOrderByRelevanceFieldEnum)[keyof typeof ReferenceOrderByRelevanceFieldEnum]
 
 
   /**
@@ -11191,8 +12415,10 @@ export namespace Prisma {
     name?: StringFilter<"Client"> | string
     kycStatus?: StringNullableFilter<"Client"> | string | null
     notes?: StringNullableFilter<"Client"> | string | null
+    referenceId?: StringNullableFilter<"Client"> | string | null
     createdAt?: DateTimeFilter<"Client"> | Date | string
     updatedAt?: DateTimeFilter<"Client"> | Date | string
+    reference?: XOR<ReferenceNullableScalarRelationFilter, ReferenceWhereInput> | null
     policies?: PolicyListRelationFilter
     documents?: DocumentListRelationFilter
   }
@@ -11204,8 +12430,10 @@ export namespace Prisma {
     name?: SortOrder
     kycStatus?: SortOrderInput | SortOrder
     notes?: SortOrderInput | SortOrder
+    referenceId?: SortOrderInput | SortOrder
     createdAt?: SortOrder
     updatedAt?: SortOrder
+    reference?: ReferenceOrderByWithRelationInput
     policies?: PolicyOrderByRelationAggregateInput
     documents?: DocumentOrderByRelationAggregateInput
     _relevance?: ClientOrderByRelevanceInput
@@ -11221,8 +12449,10 @@ export namespace Prisma {
     name?: StringFilter<"Client"> | string
     kycStatus?: StringNullableFilter<"Client"> | string | null
     notes?: StringNullableFilter<"Client"> | string | null
+    referenceId?: StringNullableFilter<"Client"> | string | null
     createdAt?: DateTimeFilter<"Client"> | Date | string
     updatedAt?: DateTimeFilter<"Client"> | Date | string
+    reference?: XOR<ReferenceNullableScalarRelationFilter, ReferenceWhereInput> | null
     policies?: PolicyListRelationFilter
     documents?: DocumentListRelationFilter
   }, "id" | "email" | "mobile">
@@ -11234,6 +12464,7 @@ export namespace Prisma {
     name?: SortOrder
     kycStatus?: SortOrderInput | SortOrder
     notes?: SortOrderInput | SortOrder
+    referenceId?: SortOrderInput | SortOrder
     createdAt?: SortOrder
     updatedAt?: SortOrder
     _count?: ClientCountOrderByAggregateInput
@@ -11251,6 +12482,7 @@ export namespace Prisma {
     name?: StringWithAggregatesFilter<"Client"> | string
     kycStatus?: StringNullableWithAggregatesFilter<"Client"> | string | null
     notes?: StringNullableWithAggregatesFilter<"Client"> | string | null
+    referenceId?: StringNullableWithAggregatesFilter<"Client"> | string | null
     createdAt?: DateTimeWithAggregatesFilter<"Client"> | Date | string
     updatedAt?: DateTimeWithAggregatesFilter<"Client"> | Date | string
   }
@@ -11288,6 +12520,7 @@ export namespace Prisma {
     createdAt?: DateTimeFilter<"Policy"> | Date | string
     updatedAt?: DateTimeFilter<"Policy"> | Date | string
     client?: XOR<ClientScalarRelationFilter, ClientWhereInput>
+    reference?: XOR<ReferenceNullableScalarRelationFilter, ReferenceWhereInput> | null
     renewals?: RenewalListRelationFilter
     documents?: DocumentListRelationFilter
   }
@@ -11322,6 +12555,7 @@ export namespace Prisma {
     createdAt?: SortOrder
     updatedAt?: SortOrder
     client?: ClientOrderByWithRelationInput
+    reference?: ReferenceOrderByWithRelationInput
     renewals?: RenewalOrderByRelationAggregateInput
     documents?: DocumentOrderByRelationAggregateInput
     _relevance?: PolicyOrderByRelevanceInput
@@ -11361,6 +12595,7 @@ export namespace Prisma {
     createdAt?: DateTimeFilter<"Policy"> | Date | string
     updatedAt?: DateTimeFilter<"Policy"> | Date | string
     client?: XOR<ClientScalarRelationFilter, ClientWhereInput>
+    reference?: XOR<ReferenceNullableScalarRelationFilter, ReferenceWhereInput> | null
     renewals?: RenewalListRelationFilter
     documents?: DocumentListRelationFilter
   }, "id" | "policyNo_clientId_insurer_startDate">
@@ -11858,6 +13093,80 @@ export namespace Prisma {
     userId?: StringWithAggregatesFilter<"AuditLog"> | string
   }
 
+  export type ReferenceWhereInput = {
+    AND?: ReferenceWhereInput | ReferenceWhereInput[]
+    OR?: ReferenceWhereInput[]
+    NOT?: ReferenceWhereInput | ReferenceWhereInput[]
+    id?: StringFilter<"Reference"> | string
+    type?: StringFilter<"Reference"> | string
+    name?: StringFilter<"Reference"> | string
+    contact?: StringNullableFilter<"Reference"> | string | null
+    status?: StringFilter<"Reference"> | string
+    code?: StringNullableFilter<"Reference"> | string | null
+    createdAt?: DateTimeFilter<"Reference"> | Date | string
+    updatedAt?: DateTimeFilter<"Reference"> | Date | string
+    clients?: ClientListRelationFilter
+    policies?: PolicyListRelationFilter
+  }
+
+  export type ReferenceOrderByWithRelationInput = {
+    id?: SortOrder
+    type?: SortOrder
+    name?: SortOrder
+    contact?: SortOrderInput | SortOrder
+    status?: SortOrder
+    code?: SortOrderInput | SortOrder
+    createdAt?: SortOrder
+    updatedAt?: SortOrder
+    clients?: ClientOrderByRelationAggregateInput
+    policies?: PolicyOrderByRelationAggregateInput
+    _relevance?: ReferenceOrderByRelevanceInput
+  }
+
+  export type ReferenceWhereUniqueInput = Prisma.AtLeast<{
+    id?: string
+    code?: string
+    AND?: ReferenceWhereInput | ReferenceWhereInput[]
+    OR?: ReferenceWhereInput[]
+    NOT?: ReferenceWhereInput | ReferenceWhereInput[]
+    type?: StringFilter<"Reference"> | string
+    name?: StringFilter<"Reference"> | string
+    contact?: StringNullableFilter<"Reference"> | string | null
+    status?: StringFilter<"Reference"> | string
+    createdAt?: DateTimeFilter<"Reference"> | Date | string
+    updatedAt?: DateTimeFilter<"Reference"> | Date | string
+    clients?: ClientListRelationFilter
+    policies?: PolicyListRelationFilter
+  }, "id" | "code">
+
+  export type ReferenceOrderByWithAggregationInput = {
+    id?: SortOrder
+    type?: SortOrder
+    name?: SortOrder
+    contact?: SortOrderInput | SortOrder
+    status?: SortOrder
+    code?: SortOrderInput | SortOrder
+    createdAt?: SortOrder
+    updatedAt?: SortOrder
+    _count?: ReferenceCountOrderByAggregateInput
+    _max?: ReferenceMaxOrderByAggregateInput
+    _min?: ReferenceMinOrderByAggregateInput
+  }
+
+  export type ReferenceScalarWhereWithAggregatesInput = {
+    AND?: ReferenceScalarWhereWithAggregatesInput | ReferenceScalarWhereWithAggregatesInput[]
+    OR?: ReferenceScalarWhereWithAggregatesInput[]
+    NOT?: ReferenceScalarWhereWithAggregatesInput | ReferenceScalarWhereWithAggregatesInput[]
+    id?: StringWithAggregatesFilter<"Reference"> | string
+    type?: StringWithAggregatesFilter<"Reference"> | string
+    name?: StringWithAggregatesFilter<"Reference"> | string
+    contact?: StringNullableWithAggregatesFilter<"Reference"> | string | null
+    status?: StringWithAggregatesFilter<"Reference"> | string
+    code?: StringNullableWithAggregatesFilter<"Reference"> | string | null
+    createdAt?: DateTimeWithAggregatesFilter<"Reference"> | Date | string
+    updatedAt?: DateTimeWithAggregatesFilter<"Reference"> | Date | string
+  }
+
   export type UserCreateInput = {
     id?: string
     email: string
@@ -11945,6 +13254,7 @@ export namespace Prisma {
     notes?: string | null
     createdAt?: Date | string
     updatedAt?: Date | string
+    reference?: ReferenceCreateNestedOneWithoutClientsInput
     policies?: PolicyCreateNestedManyWithoutClientInput
     documents?: DocumentCreateNestedManyWithoutClientInput
   }
@@ -11956,6 +13266,7 @@ export namespace Prisma {
     name: string
     kycStatus?: string | null
     notes?: string | null
+    referenceId?: string | null
     createdAt?: Date | string
     updatedAt?: Date | string
     policies?: PolicyUncheckedCreateNestedManyWithoutClientInput
@@ -11971,6 +13282,7 @@ export namespace Prisma {
     notes?: NullableStringFieldUpdateOperationsInput | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    reference?: ReferenceUpdateOneWithoutClientsNestedInput
     policies?: PolicyUpdateManyWithoutClientNestedInput
     documents?: DocumentUpdateManyWithoutClientNestedInput
   }
@@ -11982,6 +13294,7 @@ export namespace Prisma {
     name?: StringFieldUpdateOperationsInput | string
     kycStatus?: NullableStringFieldUpdateOperationsInput | string | null
     notes?: NullableStringFieldUpdateOperationsInput | string | null
+    referenceId?: NullableStringFieldUpdateOperationsInput | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     policies?: PolicyUncheckedUpdateManyWithoutClientNestedInput
@@ -11995,6 +13308,7 @@ export namespace Prisma {
     name: string
     kycStatus?: string | null
     notes?: string | null
+    referenceId?: string | null
     createdAt?: Date | string
     updatedAt?: Date | string
   }
@@ -12017,6 +13331,7 @@ export namespace Prisma {
     name?: StringFieldUpdateOperationsInput | string
     kycStatus?: NullableStringFieldUpdateOperationsInput | string | null
     notes?: NullableStringFieldUpdateOperationsInput | string | null
+    referenceId?: NullableStringFieldUpdateOperationsInput | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
   }
@@ -12045,11 +13360,11 @@ export namespace Prisma {
     ppt?: number | null
     pt?: number | null
     notes?: string | null
-    referenceId?: string | null
     assignedTo?: string | null
     createdAt?: Date | string
     updatedAt?: Date | string
     client: ClientCreateNestedOneWithoutPoliciesInput
+    reference?: ReferenceCreateNestedOneWithoutPoliciesInput
     renewals?: RenewalCreateNestedManyWithoutPolicyInput
     documents?: DocumentCreateNestedManyWithoutPolicyInput
   }
@@ -12111,11 +13426,11 @@ export namespace Prisma {
     ppt?: NullableIntFieldUpdateOperationsInput | number | null
     pt?: NullableIntFieldUpdateOperationsInput | number | null
     notes?: NullableStringFieldUpdateOperationsInput | string | null
-    referenceId?: NullableStringFieldUpdateOperationsInput | string | null
     assignedTo?: NullableStringFieldUpdateOperationsInput | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     client?: ClientUpdateOneRequiredWithoutPoliciesNestedInput
+    reference?: ReferenceUpdateOneWithoutPoliciesNestedInput
     renewals?: RenewalUpdateManyWithoutPolicyNestedInput
     documents?: DocumentUpdateManyWithoutPolicyNestedInput
   }
@@ -12208,7 +13523,6 @@ export namespace Prisma {
     ppt?: NullableIntFieldUpdateOperationsInput | number | null
     pt?: NullableIntFieldUpdateOperationsInput | number | null
     notes?: NullableStringFieldUpdateOperationsInput | string | null
-    referenceId?: NullableStringFieldUpdateOperationsInput | string | null
     assignedTo?: NullableStringFieldUpdateOperationsInput | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -12691,6 +14005,91 @@ export namespace Prisma {
     userId?: StringFieldUpdateOperationsInput | string
   }
 
+  export type ReferenceCreateInput = {
+    id?: string
+    type: string
+    name: string
+    contact?: string | null
+    status?: string
+    code?: string | null
+    createdAt?: Date | string
+    updatedAt?: Date | string
+    clients?: ClientCreateNestedManyWithoutReferenceInput
+    policies?: PolicyCreateNestedManyWithoutReferenceInput
+  }
+
+  export type ReferenceUncheckedCreateInput = {
+    id?: string
+    type: string
+    name: string
+    contact?: string | null
+    status?: string
+    code?: string | null
+    createdAt?: Date | string
+    updatedAt?: Date | string
+    clients?: ClientUncheckedCreateNestedManyWithoutReferenceInput
+    policies?: PolicyUncheckedCreateNestedManyWithoutReferenceInput
+  }
+
+  export type ReferenceUpdateInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    type?: StringFieldUpdateOperationsInput | string
+    name?: StringFieldUpdateOperationsInput | string
+    contact?: NullableStringFieldUpdateOperationsInput | string | null
+    status?: StringFieldUpdateOperationsInput | string
+    code?: NullableStringFieldUpdateOperationsInput | string | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    clients?: ClientUpdateManyWithoutReferenceNestedInput
+    policies?: PolicyUpdateManyWithoutReferenceNestedInput
+  }
+
+  export type ReferenceUncheckedUpdateInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    type?: StringFieldUpdateOperationsInput | string
+    name?: StringFieldUpdateOperationsInput | string
+    contact?: NullableStringFieldUpdateOperationsInput | string | null
+    status?: StringFieldUpdateOperationsInput | string
+    code?: NullableStringFieldUpdateOperationsInput | string | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    clients?: ClientUncheckedUpdateManyWithoutReferenceNestedInput
+    policies?: PolicyUncheckedUpdateManyWithoutReferenceNestedInput
+  }
+
+  export type ReferenceCreateManyInput = {
+    id?: string
+    type: string
+    name: string
+    contact?: string | null
+    status?: string
+    code?: string | null
+    createdAt?: Date | string
+    updatedAt?: Date | string
+  }
+
+  export type ReferenceUpdateManyMutationInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    type?: StringFieldUpdateOperationsInput | string
+    name?: StringFieldUpdateOperationsInput | string
+    contact?: NullableStringFieldUpdateOperationsInput | string | null
+    status?: StringFieldUpdateOperationsInput | string
+    code?: NullableStringFieldUpdateOperationsInput | string | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type ReferenceUncheckedUpdateManyInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    type?: StringFieldUpdateOperationsInput | string
+    name?: StringFieldUpdateOperationsInput | string
+    contact?: NullableStringFieldUpdateOperationsInput | string | null
+    status?: StringFieldUpdateOperationsInput | string
+    code?: NullableStringFieldUpdateOperationsInput | string | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
   export type StringFilter<$PrismaModel = never> = {
     equals?: string | StringFieldRefInput<$PrismaModel>
     in?: string[]
@@ -12820,6 +14219,11 @@ export namespace Prisma {
     not?: NestedStringNullableFilter<$PrismaModel> | string | null
   }
 
+  export type ReferenceNullableScalarRelationFilter = {
+    is?: ReferenceWhereInput | null
+    isNot?: ReferenceWhereInput | null
+  }
+
   export type PolicyListRelationFilter = {
     every?: PolicyWhereInput
     some?: PolicyWhereInput
@@ -12858,6 +14262,7 @@ export namespace Prisma {
     name?: SortOrder
     kycStatus?: SortOrder
     notes?: SortOrder
+    referenceId?: SortOrder
     createdAt?: SortOrder
     updatedAt?: SortOrder
   }
@@ -12869,6 +14274,7 @@ export namespace Prisma {
     name?: SortOrder
     kycStatus?: SortOrder
     notes?: SortOrder
+    referenceId?: SortOrder
     createdAt?: SortOrder
     updatedAt?: SortOrder
   }
@@ -12880,6 +14286,7 @@ export namespace Prisma {
     name?: SortOrder
     kycStatus?: SortOrder
     notes?: SortOrder
+    referenceId?: SortOrder
     createdAt?: SortOrder
     updatedAt?: SortOrder
   }
@@ -13442,6 +14849,55 @@ export namespace Prisma {
     userId?: SortOrder
   }
 
+  export type ClientListRelationFilter = {
+    every?: ClientWhereInput
+    some?: ClientWhereInput
+    none?: ClientWhereInput
+  }
+
+  export type ClientOrderByRelationAggregateInput = {
+    _count?: SortOrder
+  }
+
+  export type ReferenceOrderByRelevanceInput = {
+    fields: ReferenceOrderByRelevanceFieldEnum | ReferenceOrderByRelevanceFieldEnum[]
+    sort: SortOrder
+    search: string
+  }
+
+  export type ReferenceCountOrderByAggregateInput = {
+    id?: SortOrder
+    type?: SortOrder
+    name?: SortOrder
+    contact?: SortOrder
+    status?: SortOrder
+    code?: SortOrder
+    createdAt?: SortOrder
+    updatedAt?: SortOrder
+  }
+
+  export type ReferenceMaxOrderByAggregateInput = {
+    id?: SortOrder
+    type?: SortOrder
+    name?: SortOrder
+    contact?: SortOrder
+    status?: SortOrder
+    code?: SortOrder
+    createdAt?: SortOrder
+    updatedAt?: SortOrder
+  }
+
+  export type ReferenceMinOrderByAggregateInput = {
+    id?: SortOrder
+    type?: SortOrder
+    name?: SortOrder
+    contact?: SortOrder
+    status?: SortOrder
+    code?: SortOrder
+    createdAt?: SortOrder
+    updatedAt?: SortOrder
+  }
+
   export type ActivityCreateNestedManyWithoutUserInput = {
     create?: XOR<ActivityCreateWithoutUserInput, ActivityUncheckedCreateWithoutUserInput> | ActivityCreateWithoutUserInput[] | ActivityUncheckedCreateWithoutUserInput[]
     connectOrCreate?: ActivityCreateOrConnectWithoutUserInput | ActivityCreateOrConnectWithoutUserInput[]
@@ -13534,6 +14990,12 @@ export namespace Prisma {
     deleteMany?: AuditLogScalarWhereInput | AuditLogScalarWhereInput[]
   }
 
+  export type ReferenceCreateNestedOneWithoutClientsInput = {
+    create?: XOR<ReferenceCreateWithoutClientsInput, ReferenceUncheckedCreateWithoutClientsInput>
+    connectOrCreate?: ReferenceCreateOrConnectWithoutClientsInput
+    connect?: ReferenceWhereUniqueInput
+  }
+
   export type PolicyCreateNestedManyWithoutClientInput = {
     create?: XOR<PolicyCreateWithoutClientInput, PolicyUncheckedCreateWithoutClientInput> | PolicyCreateWithoutClientInput[] | PolicyUncheckedCreateWithoutClientInput[]
     connectOrCreate?: PolicyCreateOrConnectWithoutClientInput | PolicyCreateOrConnectWithoutClientInput[]
@@ -13564,6 +15026,16 @@ export namespace Prisma {
 
   export type NullableStringFieldUpdateOperationsInput = {
     set?: string | null
+  }
+
+  export type ReferenceUpdateOneWithoutClientsNestedInput = {
+    create?: XOR<ReferenceCreateWithoutClientsInput, ReferenceUncheckedCreateWithoutClientsInput>
+    connectOrCreate?: ReferenceCreateOrConnectWithoutClientsInput
+    upsert?: ReferenceUpsertWithoutClientsInput
+    disconnect?: ReferenceWhereInput | boolean
+    delete?: ReferenceWhereInput | boolean
+    connect?: ReferenceWhereUniqueInput
+    update?: XOR<XOR<ReferenceUpdateToOneWithWhereWithoutClientsInput, ReferenceUpdateWithoutClientsInput>, ReferenceUncheckedUpdateWithoutClientsInput>
   }
 
   export type PolicyUpdateManyWithoutClientNestedInput = {
@@ -13628,6 +15100,12 @@ export namespace Prisma {
     connect?: ClientWhereUniqueInput
   }
 
+  export type ReferenceCreateNestedOneWithoutPoliciesInput = {
+    create?: XOR<ReferenceCreateWithoutPoliciesInput, ReferenceUncheckedCreateWithoutPoliciesInput>
+    connectOrCreate?: ReferenceCreateOrConnectWithoutPoliciesInput
+    connect?: ReferenceWhereUniqueInput
+  }
+
   export type RenewalCreateNestedManyWithoutPolicyInput = {
     create?: XOR<RenewalCreateWithoutPolicyInput, RenewalUncheckedCreateWithoutPolicyInput> | RenewalCreateWithoutPolicyInput[] | RenewalUncheckedCreateWithoutPolicyInput[]
     connectOrCreate?: RenewalCreateOrConnectWithoutPolicyInput | RenewalCreateOrConnectWithoutPolicyInput[]
@@ -13690,6 +15168,16 @@ export namespace Prisma {
     upsert?: ClientUpsertWithoutPoliciesInput
     connect?: ClientWhereUniqueInput
     update?: XOR<XOR<ClientUpdateToOneWithWhereWithoutPoliciesInput, ClientUpdateWithoutPoliciesInput>, ClientUncheckedUpdateWithoutPoliciesInput>
+  }
+
+  export type ReferenceUpdateOneWithoutPoliciesNestedInput = {
+    create?: XOR<ReferenceCreateWithoutPoliciesInput, ReferenceUncheckedCreateWithoutPoliciesInput>
+    connectOrCreate?: ReferenceCreateOrConnectWithoutPoliciesInput
+    upsert?: ReferenceUpsertWithoutPoliciesInput
+    disconnect?: ReferenceWhereInput | boolean
+    delete?: ReferenceWhereInput | boolean
+    connect?: ReferenceWhereUniqueInput
+    update?: XOR<XOR<ReferenceUpdateToOneWithWhereWithoutPoliciesInput, ReferenceUpdateWithoutPoliciesInput>, ReferenceUncheckedUpdateWithoutPoliciesInput>
   }
 
   export type RenewalUpdateManyWithoutPolicyNestedInput = {
@@ -13884,6 +15372,90 @@ export namespace Prisma {
     upsert?: UserUpsertWithoutAuditLogsInput
     connect?: UserWhereUniqueInput
     update?: XOR<XOR<UserUpdateToOneWithWhereWithoutAuditLogsInput, UserUpdateWithoutAuditLogsInput>, UserUncheckedUpdateWithoutAuditLogsInput>
+  }
+
+  export type ClientCreateNestedManyWithoutReferenceInput = {
+    create?: XOR<ClientCreateWithoutReferenceInput, ClientUncheckedCreateWithoutReferenceInput> | ClientCreateWithoutReferenceInput[] | ClientUncheckedCreateWithoutReferenceInput[]
+    connectOrCreate?: ClientCreateOrConnectWithoutReferenceInput | ClientCreateOrConnectWithoutReferenceInput[]
+    createMany?: ClientCreateManyReferenceInputEnvelope
+    connect?: ClientWhereUniqueInput | ClientWhereUniqueInput[]
+  }
+
+  export type PolicyCreateNestedManyWithoutReferenceInput = {
+    create?: XOR<PolicyCreateWithoutReferenceInput, PolicyUncheckedCreateWithoutReferenceInput> | PolicyCreateWithoutReferenceInput[] | PolicyUncheckedCreateWithoutReferenceInput[]
+    connectOrCreate?: PolicyCreateOrConnectWithoutReferenceInput | PolicyCreateOrConnectWithoutReferenceInput[]
+    createMany?: PolicyCreateManyReferenceInputEnvelope
+    connect?: PolicyWhereUniqueInput | PolicyWhereUniqueInput[]
+  }
+
+  export type ClientUncheckedCreateNestedManyWithoutReferenceInput = {
+    create?: XOR<ClientCreateWithoutReferenceInput, ClientUncheckedCreateWithoutReferenceInput> | ClientCreateWithoutReferenceInput[] | ClientUncheckedCreateWithoutReferenceInput[]
+    connectOrCreate?: ClientCreateOrConnectWithoutReferenceInput | ClientCreateOrConnectWithoutReferenceInput[]
+    createMany?: ClientCreateManyReferenceInputEnvelope
+    connect?: ClientWhereUniqueInput | ClientWhereUniqueInput[]
+  }
+
+  export type PolicyUncheckedCreateNestedManyWithoutReferenceInput = {
+    create?: XOR<PolicyCreateWithoutReferenceInput, PolicyUncheckedCreateWithoutReferenceInput> | PolicyCreateWithoutReferenceInput[] | PolicyUncheckedCreateWithoutReferenceInput[]
+    connectOrCreate?: PolicyCreateOrConnectWithoutReferenceInput | PolicyCreateOrConnectWithoutReferenceInput[]
+    createMany?: PolicyCreateManyReferenceInputEnvelope
+    connect?: PolicyWhereUniqueInput | PolicyWhereUniqueInput[]
+  }
+
+  export type ClientUpdateManyWithoutReferenceNestedInput = {
+    create?: XOR<ClientCreateWithoutReferenceInput, ClientUncheckedCreateWithoutReferenceInput> | ClientCreateWithoutReferenceInput[] | ClientUncheckedCreateWithoutReferenceInput[]
+    connectOrCreate?: ClientCreateOrConnectWithoutReferenceInput | ClientCreateOrConnectWithoutReferenceInput[]
+    upsert?: ClientUpsertWithWhereUniqueWithoutReferenceInput | ClientUpsertWithWhereUniqueWithoutReferenceInput[]
+    createMany?: ClientCreateManyReferenceInputEnvelope
+    set?: ClientWhereUniqueInput | ClientWhereUniqueInput[]
+    disconnect?: ClientWhereUniqueInput | ClientWhereUniqueInput[]
+    delete?: ClientWhereUniqueInput | ClientWhereUniqueInput[]
+    connect?: ClientWhereUniqueInput | ClientWhereUniqueInput[]
+    update?: ClientUpdateWithWhereUniqueWithoutReferenceInput | ClientUpdateWithWhereUniqueWithoutReferenceInput[]
+    updateMany?: ClientUpdateManyWithWhereWithoutReferenceInput | ClientUpdateManyWithWhereWithoutReferenceInput[]
+    deleteMany?: ClientScalarWhereInput | ClientScalarWhereInput[]
+  }
+
+  export type PolicyUpdateManyWithoutReferenceNestedInput = {
+    create?: XOR<PolicyCreateWithoutReferenceInput, PolicyUncheckedCreateWithoutReferenceInput> | PolicyCreateWithoutReferenceInput[] | PolicyUncheckedCreateWithoutReferenceInput[]
+    connectOrCreate?: PolicyCreateOrConnectWithoutReferenceInput | PolicyCreateOrConnectWithoutReferenceInput[]
+    upsert?: PolicyUpsertWithWhereUniqueWithoutReferenceInput | PolicyUpsertWithWhereUniqueWithoutReferenceInput[]
+    createMany?: PolicyCreateManyReferenceInputEnvelope
+    set?: PolicyWhereUniqueInput | PolicyWhereUniqueInput[]
+    disconnect?: PolicyWhereUniqueInput | PolicyWhereUniqueInput[]
+    delete?: PolicyWhereUniqueInput | PolicyWhereUniqueInput[]
+    connect?: PolicyWhereUniqueInput | PolicyWhereUniqueInput[]
+    update?: PolicyUpdateWithWhereUniqueWithoutReferenceInput | PolicyUpdateWithWhereUniqueWithoutReferenceInput[]
+    updateMany?: PolicyUpdateManyWithWhereWithoutReferenceInput | PolicyUpdateManyWithWhereWithoutReferenceInput[]
+    deleteMany?: PolicyScalarWhereInput | PolicyScalarWhereInput[]
+  }
+
+  export type ClientUncheckedUpdateManyWithoutReferenceNestedInput = {
+    create?: XOR<ClientCreateWithoutReferenceInput, ClientUncheckedCreateWithoutReferenceInput> | ClientCreateWithoutReferenceInput[] | ClientUncheckedCreateWithoutReferenceInput[]
+    connectOrCreate?: ClientCreateOrConnectWithoutReferenceInput | ClientCreateOrConnectWithoutReferenceInput[]
+    upsert?: ClientUpsertWithWhereUniqueWithoutReferenceInput | ClientUpsertWithWhereUniqueWithoutReferenceInput[]
+    createMany?: ClientCreateManyReferenceInputEnvelope
+    set?: ClientWhereUniqueInput | ClientWhereUniqueInput[]
+    disconnect?: ClientWhereUniqueInput | ClientWhereUniqueInput[]
+    delete?: ClientWhereUniqueInput | ClientWhereUniqueInput[]
+    connect?: ClientWhereUniqueInput | ClientWhereUniqueInput[]
+    update?: ClientUpdateWithWhereUniqueWithoutReferenceInput | ClientUpdateWithWhereUniqueWithoutReferenceInput[]
+    updateMany?: ClientUpdateManyWithWhereWithoutReferenceInput | ClientUpdateManyWithWhereWithoutReferenceInput[]
+    deleteMany?: ClientScalarWhereInput | ClientScalarWhereInput[]
+  }
+
+  export type PolicyUncheckedUpdateManyWithoutReferenceNestedInput = {
+    create?: XOR<PolicyCreateWithoutReferenceInput, PolicyUncheckedCreateWithoutReferenceInput> | PolicyCreateWithoutReferenceInput[] | PolicyUncheckedCreateWithoutReferenceInput[]
+    connectOrCreate?: PolicyCreateOrConnectWithoutReferenceInput | PolicyCreateOrConnectWithoutReferenceInput[]
+    upsert?: PolicyUpsertWithWhereUniqueWithoutReferenceInput | PolicyUpsertWithWhereUniqueWithoutReferenceInput[]
+    createMany?: PolicyCreateManyReferenceInputEnvelope
+    set?: PolicyWhereUniqueInput | PolicyWhereUniqueInput[]
+    disconnect?: PolicyWhereUniqueInput | PolicyWhereUniqueInput[]
+    delete?: PolicyWhereUniqueInput | PolicyWhereUniqueInput[]
+    connect?: PolicyWhereUniqueInput | PolicyWhereUniqueInput[]
+    update?: PolicyUpdateWithWhereUniqueWithoutReferenceInput | PolicyUpdateWithWhereUniqueWithoutReferenceInput[]
+    updateMany?: PolicyUpdateManyWithWhereWithoutReferenceInput | PolicyUpdateManyWithWhereWithoutReferenceInput[]
+    deleteMany?: PolicyScalarWhereInput | PolicyScalarWhereInput[]
   }
 
   export type NestedStringFilter<$PrismaModel = never> = {
@@ -14224,6 +15796,35 @@ export namespace Prisma {
     userId?: StringFilter<"AuditLog"> | string
   }
 
+  export type ReferenceCreateWithoutClientsInput = {
+    id?: string
+    type: string
+    name: string
+    contact?: string | null
+    status?: string
+    code?: string | null
+    createdAt?: Date | string
+    updatedAt?: Date | string
+    policies?: PolicyCreateNestedManyWithoutReferenceInput
+  }
+
+  export type ReferenceUncheckedCreateWithoutClientsInput = {
+    id?: string
+    type: string
+    name: string
+    contact?: string | null
+    status?: string
+    code?: string | null
+    createdAt?: Date | string
+    updatedAt?: Date | string
+    policies?: PolicyUncheckedCreateNestedManyWithoutReferenceInput
+  }
+
+  export type ReferenceCreateOrConnectWithoutClientsInput = {
+    where: ReferenceWhereUniqueInput
+    create: XOR<ReferenceCreateWithoutClientsInput, ReferenceUncheckedCreateWithoutClientsInput>
+  }
+
   export type PolicyCreateWithoutClientInput = {
     id?: string
     policyNo: string
@@ -14248,10 +15849,10 @@ export namespace Prisma {
     ppt?: number | null
     pt?: number | null
     notes?: string | null
-    referenceId?: string | null
     assignedTo?: string | null
     createdAt?: Date | string
     updatedAt?: Date | string
+    reference?: ReferenceCreateNestedOneWithoutPoliciesInput
     renewals?: RenewalCreateNestedManyWithoutPolicyInput
     documents?: DocumentCreateNestedManyWithoutPolicyInput
   }
@@ -14332,6 +15933,41 @@ export namespace Prisma {
   export type DocumentCreateManyClientInputEnvelope = {
     data: DocumentCreateManyClientInput | DocumentCreateManyClientInput[]
     skipDuplicates?: boolean
+  }
+
+  export type ReferenceUpsertWithoutClientsInput = {
+    update: XOR<ReferenceUpdateWithoutClientsInput, ReferenceUncheckedUpdateWithoutClientsInput>
+    create: XOR<ReferenceCreateWithoutClientsInput, ReferenceUncheckedCreateWithoutClientsInput>
+    where?: ReferenceWhereInput
+  }
+
+  export type ReferenceUpdateToOneWithWhereWithoutClientsInput = {
+    where?: ReferenceWhereInput
+    data: XOR<ReferenceUpdateWithoutClientsInput, ReferenceUncheckedUpdateWithoutClientsInput>
+  }
+
+  export type ReferenceUpdateWithoutClientsInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    type?: StringFieldUpdateOperationsInput | string
+    name?: StringFieldUpdateOperationsInput | string
+    contact?: NullableStringFieldUpdateOperationsInput | string | null
+    status?: StringFieldUpdateOperationsInput | string
+    code?: NullableStringFieldUpdateOperationsInput | string | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    policies?: PolicyUpdateManyWithoutReferenceNestedInput
+  }
+
+  export type ReferenceUncheckedUpdateWithoutClientsInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    type?: StringFieldUpdateOperationsInput | string
+    name?: StringFieldUpdateOperationsInput | string
+    contact?: NullableStringFieldUpdateOperationsInput | string | null
+    status?: StringFieldUpdateOperationsInput | string
+    code?: NullableStringFieldUpdateOperationsInput | string | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    policies?: PolicyUncheckedUpdateManyWithoutReferenceNestedInput
   }
 
   export type PolicyUpsertWithWhereUniqueWithoutClientInput = {
@@ -14426,6 +16062,7 @@ export namespace Prisma {
     notes?: string | null
     createdAt?: Date | string
     updatedAt?: Date | string
+    reference?: ReferenceCreateNestedOneWithoutClientsInput
     documents?: DocumentCreateNestedManyWithoutClientInput
   }
 
@@ -14436,6 +16073,7 @@ export namespace Prisma {
     name: string
     kycStatus?: string | null
     notes?: string | null
+    referenceId?: string | null
     createdAt?: Date | string
     updatedAt?: Date | string
     documents?: DocumentUncheckedCreateNestedManyWithoutClientInput
@@ -14444,6 +16082,35 @@ export namespace Prisma {
   export type ClientCreateOrConnectWithoutPoliciesInput = {
     where: ClientWhereUniqueInput
     create: XOR<ClientCreateWithoutPoliciesInput, ClientUncheckedCreateWithoutPoliciesInput>
+  }
+
+  export type ReferenceCreateWithoutPoliciesInput = {
+    id?: string
+    type: string
+    name: string
+    contact?: string | null
+    status?: string
+    code?: string | null
+    createdAt?: Date | string
+    updatedAt?: Date | string
+    clients?: ClientCreateNestedManyWithoutReferenceInput
+  }
+
+  export type ReferenceUncheckedCreateWithoutPoliciesInput = {
+    id?: string
+    type: string
+    name: string
+    contact?: string | null
+    status?: string
+    code?: string | null
+    createdAt?: Date | string
+    updatedAt?: Date | string
+    clients?: ClientUncheckedCreateNestedManyWithoutReferenceInput
+  }
+
+  export type ReferenceCreateOrConnectWithoutPoliciesInput = {
+    where: ReferenceWhereUniqueInput
+    create: XOR<ReferenceCreateWithoutPoliciesInput, ReferenceUncheckedCreateWithoutPoliciesInput>
   }
 
   export type RenewalCreateWithoutPolicyInput = {
@@ -14532,6 +16199,7 @@ export namespace Prisma {
     notes?: NullableStringFieldUpdateOperationsInput | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    reference?: ReferenceUpdateOneWithoutClientsNestedInput
     documents?: DocumentUpdateManyWithoutClientNestedInput
   }
 
@@ -14542,9 +16210,45 @@ export namespace Prisma {
     name?: StringFieldUpdateOperationsInput | string
     kycStatus?: NullableStringFieldUpdateOperationsInput | string | null
     notes?: NullableStringFieldUpdateOperationsInput | string | null
+    referenceId?: NullableStringFieldUpdateOperationsInput | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     documents?: DocumentUncheckedUpdateManyWithoutClientNestedInput
+  }
+
+  export type ReferenceUpsertWithoutPoliciesInput = {
+    update: XOR<ReferenceUpdateWithoutPoliciesInput, ReferenceUncheckedUpdateWithoutPoliciesInput>
+    create: XOR<ReferenceCreateWithoutPoliciesInput, ReferenceUncheckedCreateWithoutPoliciesInput>
+    where?: ReferenceWhereInput
+  }
+
+  export type ReferenceUpdateToOneWithWhereWithoutPoliciesInput = {
+    where?: ReferenceWhereInput
+    data: XOR<ReferenceUpdateWithoutPoliciesInput, ReferenceUncheckedUpdateWithoutPoliciesInput>
+  }
+
+  export type ReferenceUpdateWithoutPoliciesInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    type?: StringFieldUpdateOperationsInput | string
+    name?: StringFieldUpdateOperationsInput | string
+    contact?: NullableStringFieldUpdateOperationsInput | string | null
+    status?: StringFieldUpdateOperationsInput | string
+    code?: NullableStringFieldUpdateOperationsInput | string | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    clients?: ClientUpdateManyWithoutReferenceNestedInput
+  }
+
+  export type ReferenceUncheckedUpdateWithoutPoliciesInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    type?: StringFieldUpdateOperationsInput | string
+    name?: StringFieldUpdateOperationsInput | string
+    contact?: NullableStringFieldUpdateOperationsInput | string | null
+    status?: StringFieldUpdateOperationsInput | string
+    code?: NullableStringFieldUpdateOperationsInput | string | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    clients?: ClientUncheckedUpdateManyWithoutReferenceNestedInput
   }
 
   export type RenewalUpsertWithWhereUniqueWithoutPolicyInput = {
@@ -14616,11 +16320,11 @@ export namespace Prisma {
     ppt?: number | null
     pt?: number | null
     notes?: string | null
-    referenceId?: string | null
     assignedTo?: string | null
     createdAt?: Date | string
     updatedAt?: Date | string
     client: ClientCreateNestedOneWithoutPoliciesInput
+    reference?: ReferenceCreateNestedOneWithoutPoliciesInput
     documents?: DocumentCreateNestedManyWithoutPolicyInput
   }
 
@@ -14724,11 +16428,11 @@ export namespace Prisma {
     ppt?: NullableIntFieldUpdateOperationsInput | number | null
     pt?: NullableIntFieldUpdateOperationsInput | number | null
     notes?: NullableStringFieldUpdateOperationsInput | string | null
-    referenceId?: NullableStringFieldUpdateOperationsInput | string | null
     assignedTo?: NullableStringFieldUpdateOperationsInput | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     client?: ClientUpdateOneRequiredWithoutPoliciesNestedInput
+    reference?: ReferenceUpdateOneWithoutPoliciesNestedInput
     documents?: DocumentUpdateManyWithoutPolicyNestedInput
   }
 
@@ -14789,6 +16493,7 @@ export namespace Prisma {
     notes?: string | null
     createdAt?: Date | string
     updatedAt?: Date | string
+    reference?: ReferenceCreateNestedOneWithoutClientsInput
     policies?: PolicyCreateNestedManyWithoutClientInput
   }
 
@@ -14799,6 +16504,7 @@ export namespace Prisma {
     name: string
     kycStatus?: string | null
     notes?: string | null
+    referenceId?: string | null
     createdAt?: Date | string
     updatedAt?: Date | string
     policies?: PolicyUncheckedCreateNestedManyWithoutClientInput
@@ -14833,11 +16539,11 @@ export namespace Prisma {
     ppt?: number | null
     pt?: number | null
     notes?: string | null
-    referenceId?: string | null
     assignedTo?: string | null
     createdAt?: Date | string
     updatedAt?: Date | string
     client: ClientCreateNestedOneWithoutPoliciesInput
+    reference?: ReferenceCreateNestedOneWithoutPoliciesInput
     renewals?: RenewalCreateNestedManyWithoutPolicyInput
   }
 
@@ -14898,6 +16604,7 @@ export namespace Prisma {
     notes?: NullableStringFieldUpdateOperationsInput | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    reference?: ReferenceUpdateOneWithoutClientsNestedInput
     policies?: PolicyUpdateManyWithoutClientNestedInput
   }
 
@@ -14908,6 +16615,7 @@ export namespace Prisma {
     name?: StringFieldUpdateOperationsInput | string
     kycStatus?: NullableStringFieldUpdateOperationsInput | string | null
     notes?: NullableStringFieldUpdateOperationsInput | string | null
+    referenceId?: NullableStringFieldUpdateOperationsInput | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     policies?: PolicyUncheckedUpdateManyWithoutClientNestedInput
@@ -14948,11 +16656,11 @@ export namespace Prisma {
     ppt?: NullableIntFieldUpdateOperationsInput | number | null
     pt?: NullableIntFieldUpdateOperationsInput | number | null
     notes?: NullableStringFieldUpdateOperationsInput | string | null
-    referenceId?: NullableStringFieldUpdateOperationsInput | string | null
     assignedTo?: NullableStringFieldUpdateOperationsInput | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     client?: ClientUpdateOneRequiredWithoutPoliciesNestedInput
+    reference?: ReferenceUpdateOneWithoutPoliciesNestedInput
     renewals?: RenewalUpdateManyWithoutPolicyNestedInput
   }
 
@@ -15164,6 +16872,163 @@ export namespace Prisma {
     activities?: ActivityUncheckedUpdateManyWithoutUserNestedInput
   }
 
+  export type ClientCreateWithoutReferenceInput = {
+    id?: string
+    email?: string | null
+    mobile?: string | null
+    name: string
+    kycStatus?: string | null
+    notes?: string | null
+    createdAt?: Date | string
+    updatedAt?: Date | string
+    policies?: PolicyCreateNestedManyWithoutClientInput
+    documents?: DocumentCreateNestedManyWithoutClientInput
+  }
+
+  export type ClientUncheckedCreateWithoutReferenceInput = {
+    id?: string
+    email?: string | null
+    mobile?: string | null
+    name: string
+    kycStatus?: string | null
+    notes?: string | null
+    createdAt?: Date | string
+    updatedAt?: Date | string
+    policies?: PolicyUncheckedCreateNestedManyWithoutClientInput
+    documents?: DocumentUncheckedCreateNestedManyWithoutClientInput
+  }
+
+  export type ClientCreateOrConnectWithoutReferenceInput = {
+    where: ClientWhereUniqueInput
+    create: XOR<ClientCreateWithoutReferenceInput, ClientUncheckedCreateWithoutReferenceInput>
+  }
+
+  export type ClientCreateManyReferenceInputEnvelope = {
+    data: ClientCreateManyReferenceInput | ClientCreateManyReferenceInput[]
+    skipDuplicates?: boolean
+  }
+
+  export type PolicyCreateWithoutReferenceInput = {
+    id?: string
+    policyNo: string
+    type: string
+    insurer: string
+    premium: number
+    premiumPaid?: number | null
+    paymentStatus?: string | null
+    premiumMode?: string | null
+    startDate: Date | string
+    expiryDate: Date | string
+    status?: string
+    attachments?: string | null
+    tenureType?: string | null
+    tenureMonths?: number | null
+    customTenureMonths?: number | null
+    nextRenewalDate?: Date | string | null
+    vehicleNo?: string | null
+    extras?: string | null
+    earnedPremium?: number | null
+    epAmount?: number | null
+    ppt?: number | null
+    pt?: number | null
+    notes?: string | null
+    assignedTo?: string | null
+    createdAt?: Date | string
+    updatedAt?: Date | string
+    client: ClientCreateNestedOneWithoutPoliciesInput
+    renewals?: RenewalCreateNestedManyWithoutPolicyInput
+    documents?: DocumentCreateNestedManyWithoutPolicyInput
+  }
+
+  export type PolicyUncheckedCreateWithoutReferenceInput = {
+    id?: string
+    policyNo: string
+    clientId: string
+    type: string
+    insurer: string
+    premium: number
+    premiumPaid?: number | null
+    paymentStatus?: string | null
+    premiumMode?: string | null
+    startDate: Date | string
+    expiryDate: Date | string
+    status?: string
+    attachments?: string | null
+    tenureType?: string | null
+    tenureMonths?: number | null
+    customTenureMonths?: number | null
+    nextRenewalDate?: Date | string | null
+    vehicleNo?: string | null
+    extras?: string | null
+    earnedPremium?: number | null
+    epAmount?: number | null
+    ppt?: number | null
+    pt?: number | null
+    notes?: string | null
+    assignedTo?: string | null
+    createdAt?: Date | string
+    updatedAt?: Date | string
+    renewals?: RenewalUncheckedCreateNestedManyWithoutPolicyInput
+    documents?: DocumentUncheckedCreateNestedManyWithoutPolicyInput
+  }
+
+  export type PolicyCreateOrConnectWithoutReferenceInput = {
+    where: PolicyWhereUniqueInput
+    create: XOR<PolicyCreateWithoutReferenceInput, PolicyUncheckedCreateWithoutReferenceInput>
+  }
+
+  export type PolicyCreateManyReferenceInputEnvelope = {
+    data: PolicyCreateManyReferenceInput | PolicyCreateManyReferenceInput[]
+    skipDuplicates?: boolean
+  }
+
+  export type ClientUpsertWithWhereUniqueWithoutReferenceInput = {
+    where: ClientWhereUniqueInput
+    update: XOR<ClientUpdateWithoutReferenceInput, ClientUncheckedUpdateWithoutReferenceInput>
+    create: XOR<ClientCreateWithoutReferenceInput, ClientUncheckedCreateWithoutReferenceInput>
+  }
+
+  export type ClientUpdateWithWhereUniqueWithoutReferenceInput = {
+    where: ClientWhereUniqueInput
+    data: XOR<ClientUpdateWithoutReferenceInput, ClientUncheckedUpdateWithoutReferenceInput>
+  }
+
+  export type ClientUpdateManyWithWhereWithoutReferenceInput = {
+    where: ClientScalarWhereInput
+    data: XOR<ClientUpdateManyMutationInput, ClientUncheckedUpdateManyWithoutReferenceInput>
+  }
+
+  export type ClientScalarWhereInput = {
+    AND?: ClientScalarWhereInput | ClientScalarWhereInput[]
+    OR?: ClientScalarWhereInput[]
+    NOT?: ClientScalarWhereInput | ClientScalarWhereInput[]
+    id?: StringFilter<"Client"> | string
+    email?: StringNullableFilter<"Client"> | string | null
+    mobile?: StringNullableFilter<"Client"> | string | null
+    name?: StringFilter<"Client"> | string
+    kycStatus?: StringNullableFilter<"Client"> | string | null
+    notes?: StringNullableFilter<"Client"> | string | null
+    referenceId?: StringNullableFilter<"Client"> | string | null
+    createdAt?: DateTimeFilter<"Client"> | Date | string
+    updatedAt?: DateTimeFilter<"Client"> | Date | string
+  }
+
+  export type PolicyUpsertWithWhereUniqueWithoutReferenceInput = {
+    where: PolicyWhereUniqueInput
+    update: XOR<PolicyUpdateWithoutReferenceInput, PolicyUncheckedUpdateWithoutReferenceInput>
+    create: XOR<PolicyCreateWithoutReferenceInput, PolicyUncheckedCreateWithoutReferenceInput>
+  }
+
+  export type PolicyUpdateWithWhereUniqueWithoutReferenceInput = {
+    where: PolicyWhereUniqueInput
+    data: XOR<PolicyUpdateWithoutReferenceInput, PolicyUncheckedUpdateWithoutReferenceInput>
+  }
+
+  export type PolicyUpdateManyWithWhereWithoutReferenceInput = {
+    where: PolicyScalarWhereInput
+    data: XOR<PolicyUpdateManyMutationInput, PolicyUncheckedUpdateManyWithoutReferenceInput>
+  }
+
   export type ActivityCreateManyUserInput = {
     id?: string
     renewalId?: string | null
@@ -15303,10 +17168,10 @@ export namespace Prisma {
     ppt?: NullableIntFieldUpdateOperationsInput | number | null
     pt?: NullableIntFieldUpdateOperationsInput | number | null
     notes?: NullableStringFieldUpdateOperationsInput | string | null
-    referenceId?: NullableStringFieldUpdateOperationsInput | string | null
     assignedTo?: NullableStringFieldUpdateOperationsInput | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    reference?: ReferenceUpdateOneWithoutPoliciesNestedInput
     renewals?: RenewalUpdateManyWithoutPolicyNestedInput
     documents?: DocumentUpdateManyWithoutPolicyNestedInput
   }
@@ -15536,6 +17401,178 @@ export namespace Prisma {
     notes?: StringFieldUpdateOperationsInput | string
     followupDate?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type ClientCreateManyReferenceInput = {
+    id?: string
+    email?: string | null
+    mobile?: string | null
+    name: string
+    kycStatus?: string | null
+    notes?: string | null
+    createdAt?: Date | string
+    updatedAt?: Date | string
+  }
+
+  export type PolicyCreateManyReferenceInput = {
+    id?: string
+    policyNo: string
+    clientId: string
+    type: string
+    insurer: string
+    premium: number
+    premiumPaid?: number | null
+    paymentStatus?: string | null
+    premiumMode?: string | null
+    startDate: Date | string
+    expiryDate: Date | string
+    status?: string
+    attachments?: string | null
+    tenureType?: string | null
+    tenureMonths?: number | null
+    customTenureMonths?: number | null
+    nextRenewalDate?: Date | string | null
+    vehicleNo?: string | null
+    extras?: string | null
+    earnedPremium?: number | null
+    epAmount?: number | null
+    ppt?: number | null
+    pt?: number | null
+    notes?: string | null
+    assignedTo?: string | null
+    createdAt?: Date | string
+    updatedAt?: Date | string
+  }
+
+  export type ClientUpdateWithoutReferenceInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    email?: NullableStringFieldUpdateOperationsInput | string | null
+    mobile?: NullableStringFieldUpdateOperationsInput | string | null
+    name?: StringFieldUpdateOperationsInput | string
+    kycStatus?: NullableStringFieldUpdateOperationsInput | string | null
+    notes?: NullableStringFieldUpdateOperationsInput | string | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    policies?: PolicyUpdateManyWithoutClientNestedInput
+    documents?: DocumentUpdateManyWithoutClientNestedInput
+  }
+
+  export type ClientUncheckedUpdateWithoutReferenceInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    email?: NullableStringFieldUpdateOperationsInput | string | null
+    mobile?: NullableStringFieldUpdateOperationsInput | string | null
+    name?: StringFieldUpdateOperationsInput | string
+    kycStatus?: NullableStringFieldUpdateOperationsInput | string | null
+    notes?: NullableStringFieldUpdateOperationsInput | string | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    policies?: PolicyUncheckedUpdateManyWithoutClientNestedInput
+    documents?: DocumentUncheckedUpdateManyWithoutClientNestedInput
+  }
+
+  export type ClientUncheckedUpdateManyWithoutReferenceInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    email?: NullableStringFieldUpdateOperationsInput | string | null
+    mobile?: NullableStringFieldUpdateOperationsInput | string | null
+    name?: StringFieldUpdateOperationsInput | string
+    kycStatus?: NullableStringFieldUpdateOperationsInput | string | null
+    notes?: NullableStringFieldUpdateOperationsInput | string | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type PolicyUpdateWithoutReferenceInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    policyNo?: StringFieldUpdateOperationsInput | string
+    type?: StringFieldUpdateOperationsInput | string
+    insurer?: StringFieldUpdateOperationsInput | string
+    premium?: FloatFieldUpdateOperationsInput | number
+    premiumPaid?: NullableFloatFieldUpdateOperationsInput | number | null
+    paymentStatus?: NullableStringFieldUpdateOperationsInput | string | null
+    premiumMode?: NullableStringFieldUpdateOperationsInput | string | null
+    startDate?: DateTimeFieldUpdateOperationsInput | Date | string
+    expiryDate?: DateTimeFieldUpdateOperationsInput | Date | string
+    status?: StringFieldUpdateOperationsInput | string
+    attachments?: NullableStringFieldUpdateOperationsInput | string | null
+    tenureType?: NullableStringFieldUpdateOperationsInput | string | null
+    tenureMonths?: NullableIntFieldUpdateOperationsInput | number | null
+    customTenureMonths?: NullableIntFieldUpdateOperationsInput | number | null
+    nextRenewalDate?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    vehicleNo?: NullableStringFieldUpdateOperationsInput | string | null
+    extras?: NullableStringFieldUpdateOperationsInput | string | null
+    earnedPremium?: NullableFloatFieldUpdateOperationsInput | number | null
+    epAmount?: NullableFloatFieldUpdateOperationsInput | number | null
+    ppt?: NullableIntFieldUpdateOperationsInput | number | null
+    pt?: NullableIntFieldUpdateOperationsInput | number | null
+    notes?: NullableStringFieldUpdateOperationsInput | string | null
+    assignedTo?: NullableStringFieldUpdateOperationsInput | string | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    client?: ClientUpdateOneRequiredWithoutPoliciesNestedInput
+    renewals?: RenewalUpdateManyWithoutPolicyNestedInput
+    documents?: DocumentUpdateManyWithoutPolicyNestedInput
+  }
+
+  export type PolicyUncheckedUpdateWithoutReferenceInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    policyNo?: StringFieldUpdateOperationsInput | string
+    clientId?: StringFieldUpdateOperationsInput | string
+    type?: StringFieldUpdateOperationsInput | string
+    insurer?: StringFieldUpdateOperationsInput | string
+    premium?: FloatFieldUpdateOperationsInput | number
+    premiumPaid?: NullableFloatFieldUpdateOperationsInput | number | null
+    paymentStatus?: NullableStringFieldUpdateOperationsInput | string | null
+    premiumMode?: NullableStringFieldUpdateOperationsInput | string | null
+    startDate?: DateTimeFieldUpdateOperationsInput | Date | string
+    expiryDate?: DateTimeFieldUpdateOperationsInput | Date | string
+    status?: StringFieldUpdateOperationsInput | string
+    attachments?: NullableStringFieldUpdateOperationsInput | string | null
+    tenureType?: NullableStringFieldUpdateOperationsInput | string | null
+    tenureMonths?: NullableIntFieldUpdateOperationsInput | number | null
+    customTenureMonths?: NullableIntFieldUpdateOperationsInput | number | null
+    nextRenewalDate?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    vehicleNo?: NullableStringFieldUpdateOperationsInput | string | null
+    extras?: NullableStringFieldUpdateOperationsInput | string | null
+    earnedPremium?: NullableFloatFieldUpdateOperationsInput | number | null
+    epAmount?: NullableFloatFieldUpdateOperationsInput | number | null
+    ppt?: NullableIntFieldUpdateOperationsInput | number | null
+    pt?: NullableIntFieldUpdateOperationsInput | number | null
+    notes?: NullableStringFieldUpdateOperationsInput | string | null
+    assignedTo?: NullableStringFieldUpdateOperationsInput | string | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    renewals?: RenewalUncheckedUpdateManyWithoutPolicyNestedInput
+    documents?: DocumentUncheckedUpdateManyWithoutPolicyNestedInput
+  }
+
+  export type PolicyUncheckedUpdateManyWithoutReferenceInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    policyNo?: StringFieldUpdateOperationsInput | string
+    clientId?: StringFieldUpdateOperationsInput | string
+    type?: StringFieldUpdateOperationsInput | string
+    insurer?: StringFieldUpdateOperationsInput | string
+    premium?: FloatFieldUpdateOperationsInput | number
+    premiumPaid?: NullableFloatFieldUpdateOperationsInput | number | null
+    paymentStatus?: NullableStringFieldUpdateOperationsInput | string | null
+    premiumMode?: NullableStringFieldUpdateOperationsInput | string | null
+    startDate?: DateTimeFieldUpdateOperationsInput | Date | string
+    expiryDate?: DateTimeFieldUpdateOperationsInput | Date | string
+    status?: StringFieldUpdateOperationsInput | string
+    attachments?: NullableStringFieldUpdateOperationsInput | string | null
+    tenureType?: NullableStringFieldUpdateOperationsInput | string | null
+    tenureMonths?: NullableIntFieldUpdateOperationsInput | number | null
+    customTenureMonths?: NullableIntFieldUpdateOperationsInput | number | null
+    nextRenewalDate?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    vehicleNo?: NullableStringFieldUpdateOperationsInput | string | null
+    extras?: NullableStringFieldUpdateOperationsInput | string | null
+    earnedPremium?: NullableFloatFieldUpdateOperationsInput | number | null
+    epAmount?: NullableFloatFieldUpdateOperationsInput | number | null
+    ppt?: NullableIntFieldUpdateOperationsInput | number | null
+    pt?: NullableIntFieldUpdateOperationsInput | number | null
+    notes?: NullableStringFieldUpdateOperationsInput | string | null
+    assignedTo?: NullableStringFieldUpdateOperationsInput | string | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
   }
 
 

@@ -105,14 +105,14 @@ export const getClientById = async (req: Request, res: Response) => {
 // Create new client
 export const createClient = async (req: Request, res: Response) => {
     try {
-        const { name, email, mobile, kycStatus, notes } = req.body;
+        const { name, email, mobile, kycStatus, notes, referenceId } = req.body;
 
         if (!name) {
             return res.status(400).json({ error: 'Name is required.' });
         }
 
         const newClient = await prisma.client.create({
-            data: { name, email, mobile, kycStatus, notes },
+            data: { name, email, mobile, kycStatus, notes, referenceId },
         });
 
         res.status(201).json(newClient);
@@ -128,11 +128,11 @@ export const createClient = async (req: Request, res: Response) => {
 export const updateClient = async (req: Request, res: Response) => {
     try {
         const id = req.params.id as string;
-        const { name, email, mobile, kycStatus, notes } = req.body;
+        const { name, email, mobile, kycStatus, notes, referenceId } = req.body;
 
         const updatedClient = await prisma.client.update({
             where: { id },
-            data: { name, email, mobile, kycStatus, notes },
+            data: { name, email, mobile, kycStatus, notes, referenceId },
         });
 
         res.json(updatedClient);
@@ -151,6 +151,27 @@ export const deleteClient = async (req: Request, res: Response) => {
         res.status(204).send();
     } catch (error) {
         res.status(500).json({ error: 'Failed to delete client' });
+    }
+};
+
+// Bulk delete clients
+export const bulkDeleteClients = async (req: Request, res: Response) => {
+    try {
+        const { clientIds } = req.body;
+        if (!clientIds || !Array.isArray(clientIds) || clientIds.length === 0) {
+            return res.status(400).json({ error: 'An array of client IDs is required.' });
+        }
+
+        await prisma.client.deleteMany({
+            where: {
+                id: { in: clientIds },
+            },
+        });
+
+        res.status(204).send();
+    } catch (error) {
+        console.error('Bulk delete error:', error);
+        res.status(500).json({ error: 'Failed to bulk delete clients' });
     }
 };
 

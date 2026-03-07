@@ -1,10 +1,10 @@
 {
-  "name": "backend",
+  "name": "crm-backend",
   "version": "1.0.0",
   "main": "index.js",
   "scripts": {
     "dev": "tsx watch src/server.ts",
-    "build": "npx prisma generate && tsc && xcopy src\\generated dist\\generated /E /I /Y",
+    "build": "npx prisma generate && tsc && shx cp -r src/generated dist/generated",
     "start": "node dist/server.js",
     "seed": "tsx src/scripts/seed.ts",
     "db:push": "prisma db push --accept-data-loss"
@@ -26,6 +26,7 @@
     "jsonwebtoken": "^9.0.3",
     "morgan": "^1.10.1",
     "multer": "^2.0.2",
+    "mysql2": "^3.19.0",
     "xlsx": "^0.18.5"
   },
   "devDependencies": {
@@ -39,6 +40,7 @@
     "@types/multer": "^2.0.0",
     "@types/node": "^25.3.0",
     "prisma": "^6.19.2",
+    "shx": "^0.3.4",
     "tsx": "^4.21.0",
     "typescript": "^5.9.3"
   }

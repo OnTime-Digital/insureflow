@@ -20,7 +20,10 @@ export const getReferences = async (req: Request, res: Response) => {
             ];
         }
 
-        const references: any[] = [];
+        const references = await prisma.reference.findMany({
+            where,
+            orderBy: { name: 'asc' }
+        });
 
         res.json(references);
     } catch (error) {
@@ -45,14 +48,15 @@ export const createReference = async (req: Request, res: Response) => {
         const codeNum = Math.floor(1000 + Math.random() * 9000);
         const code = `${codePrefix}${codeNum}`;
 
-        const newRef = {
-            id: 'mock-ref-' + Date.now(),
-            type,
-            name: name.trim(),
-            contact: contact?.trim() || null,
-            status: status || 'ACTIVE',
-            code
-        };
+        const newRef = await prisma.reference.create({
+            data: {
+                type,
+                name: name.trim(),
+                contact: contact?.trim() || null,
+                status: status || 'ACTIVE',
+                code
+            }
+        });
 
         res.status(201).json(newRef);
     } catch (error) {
@@ -67,13 +71,15 @@ export const updateReference = async (req: Request, res: Response) => {
         const id = req.params.id as string;
         const { type, name, contact, status } = req.body;
 
-        const updatedRef = {
-            id,
-            type,
-            name: name?.trim(),
-            contact: contact?.trim() || null,
-            status
-        };
+        const updatedRef = await prisma.reference.update({
+            where: { id },
+            data: {
+                type,
+                name: name?.trim(),
+                contact: contact?.trim() || null,
+                status
+            }
+        });
 
         res.json(updatedRef);
     } catch (error) {
@@ -86,7 +92,7 @@ export const updateReference = async (req: Request, res: Response) => {
 export const deleteReference = async (req: Request, res: Response) => {
     try {
         const id = req.params.id as string;
-        // await prisma.reference.delete({ where: { id } });
+        await prisma.reference.delete({ where: { id } });
         res.status(204).send();
     } catch (error) {
         console.error('Error deleting reference:', error);

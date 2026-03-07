@@ -28,17 +28,19 @@ model User {
 }
 
 model Client {
-  id        String   @id @default(uuid())
-  email     String?  @unique
-  mobile    String?  @unique
-  name      String
-  kycStatus String?
-  notes     String?  @db.Text
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  id          String     @id @default(uuid())
+  email       String?    @unique
+  mobile      String?    @unique
+  name        String
+  kycStatus   String?
+  notes       String?    @db.Text
+  referenceId String?
+  reference   Reference? @relation(fields: [referenceId], references: [id], onDelete: SetNull)
+  createdAt   DateTime   @default(now())
+  updatedAt   DateTime   @updatedAt
   
-  policies  Policy[]
-  documents Document[]
+  policies    Policy[]
+  documents   Document[]
 }
 
 model Policy {
@@ -68,6 +70,7 @@ model Policy {
   pt                  Int?       // Policy Terms (years)
   notes               String?    @db.Text
   referenceId         String?
+  reference           Reference? @relation(fields: [referenceId], references: [id], onDelete: SetNull)
   assignedTo          String?
   createdAt           DateTime   @default(now())
   updatedAt           DateTime   @updatedAt
@@ -149,4 +152,18 @@ model AuditLog {
   
   userId     String
   user       User     @relation(fields: [userId], references: [id])
+}
+
+model Reference {
+  id        String   @id @default(uuid())
+  type      String   // EMPLOYEE, AGENT, CLIENT, DIRECT
+  name      String
+  contact   String?
+  status    String   @default("ACTIVE") // ACTIVE, INACTIVE
+  code      String?  @unique // Referral code
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  clients   Client[]
+  policies  Policy[]
 }

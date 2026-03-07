@@ -138,6 +138,7 @@ exports.Prisma.ClientScalarFieldEnum = {
   name: 'name',
   kycStatus: 'kycStatus',
   notes: 'notes',
+  referenceId: 'referenceId',
   createdAt: 'createdAt',
   updatedAt: 'updatedAt'
 };
@@ -237,6 +238,17 @@ exports.Prisma.AuditLogScalarFieldEnum = {
   userId: 'userId'
 };
 
+exports.Prisma.ReferenceScalarFieldEnum = {
+  id: 'id',
+  type: 'type',
+  name: 'name',
+  contact: 'contact',
+  status: 'status',
+  code: 'code',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
+};
+
 exports.Prisma.SortOrder = {
   asc: 'asc',
   desc: 'desc'
@@ -261,7 +273,8 @@ exports.Prisma.ClientOrderByRelevanceFieldEnum = {
   mobile: 'mobile',
   name: 'name',
   kycStatus: 'kycStatus',
-  notes: 'notes'
+  notes: 'notes',
+  referenceId: 'referenceId'
 };
 
 exports.Prisma.PolicyOrderByRelevanceFieldEnum = {
@@ -333,6 +346,15 @@ exports.Prisma.AuditLogOrderByRelevanceFieldEnum = {
   userId: 'userId'
 };
 
+exports.Prisma.ReferenceOrderByRelevanceFieldEnum = {
+  id: 'id',
+  type: 'type',
+  name: 'name',
+  contact: 'contact',
+  status: 'status',
+  code: 'code'
+};
+
 
 exports.Prisma.ModelName = {
   User: 'User',
@@ -343,7 +365,8 @@ exports.Prisma.ModelName = {
   Setting: 'Setting',
   Activity: 'Activity',
   Lead: 'Lead',
-  AuditLog: 'AuditLog'
+  AuditLog: 'AuditLog',
+  Reference: 'Reference'
 };
 
 /**
