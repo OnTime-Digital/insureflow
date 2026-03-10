@@ -146,7 +146,9 @@ export default function LeadsPage() {
             await axios.post('/api/leads/bulk-delete', { leadIds: Array.from(selectedIds) });
             clearSelection();
             fetchData();
-        } catch { alert('Failed to bulk delete.'); }
+        } catch (error: any) {
+            alert(error.response?.data?.error || 'Failed to bulk delete.');
+        }
     };
 
     const handleBulkStatus = async (status: string) => {
@@ -154,7 +156,9 @@ export default function LeadsPage() {
             await axios.put('/api/leads/bulk-status', { leadIds: Array.from(selectedIds), status });
             clearSelection();
             fetchData();
-        } catch { alert('Failed to bulk update status.'); }
+        } catch (error: any) {
+            alert(error.response?.data?.error || 'Failed to bulk update status.');
+        }
     };
 
     const updateLeadStatusQuick = async (id: string, newStatus: string) => {
