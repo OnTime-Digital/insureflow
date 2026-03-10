@@ -110,9 +110,9 @@ export const bulkDeleteLeads = async (req: Request, res: Response) => {
         });
 
         res.status(204).send();
-    } catch (error) {
+    } catch (error: any) {
         console.error('Bulk delete error:', error);
-        res.status(500).json({ error: 'Failed to bulk delete leads' });
+        res.status(500).json({ error: error.message || 'Failed to bulk delete leads' });
     }
 };
 
@@ -132,9 +132,9 @@ export const bulkUpdateLeadStatus = async (req: Request, res: Response) => {
         });
 
         res.status(200).json({ message: 'Leads status updated successfully' });
-    } catch (error) {
+    } catch (error: any) {
         console.error('Bulk status update error:', error);
-        res.status(500).json({ error: 'Failed to update leads status' });
+        res.status(500).json({ error: error.message || 'Failed to update leads status' });
     }
 };
 
