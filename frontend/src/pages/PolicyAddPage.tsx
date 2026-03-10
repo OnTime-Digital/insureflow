@@ -2,7 +2,7 @@ import { useState, useEffect, useRef } from 'react';
 import { useNavigate, Link, useParams } from 'react-router-dom';
 import {
     ArrowLeft, User, ShieldCheck, IndianRupee, Building2,
-    Calendar, Link as LinkIcon, FileText, Car, ShieldAlert, Plus, Clock
+    Calendar, Link as LinkIcon, FileText, Car, ShieldAlert, Plus, Clock, SkipForward
 } from 'lucide-react';
 import axios from 'axios';
 import { format, addMonths } from 'date-fns';
@@ -213,7 +213,6 @@ export default function PolicyAddPage() {
         }
     };
 
-    // Auto-calculate expiryDate based on tenureType + startDate
     useEffect(() => {
         if (!formData.startDate || !formData.tenureType) return;
         if (formData.tenureType === 'CUSTOM') return;
@@ -231,6 +230,13 @@ export default function PolicyAddPage() {
             setFormData(prev => ({ ...prev, expiryDate: format(end, 'yyyy-MM-dd') }));
         }
     }, [formData.startDate, formData.tenureType]);
+
+    // Force non-Life policies to always use ANNUAL premium mode
+    useEffect(() => {
+        if (formData.type !== 'Life' && formData.premiumMode !== 'ANNUAL') {
+            setFormData(prev => ({ ...prev, premiumMode: 'ANNUAL', customPremiumDays: '' }));
+        }
+    }, [formData.type, formData.premiumMode]);
 
     // Auto-calculate expiryDate for CUSTOM when customTenureMonths changes
     useEffect(() => {
@@ -293,7 +299,6 @@ export default function PolicyAddPage() {
                 }
                 const clientRes = await axios.post('/api/clients', {
                     ...newClientData,
-                    kycStatus: 'Pending',
                     notes: 'Auto-created during policy addition.'
                 });
                 finalClientId = clientRes.data.id;
@@ -396,8 +401,25 @@ export default function PolicyAddPage() {
             );
         }
         if (formData.type === 'Life') {
-            // Life details removed per user requirements; Maturity Date is handled via PT (Policy Terms).
-            return null;
+            return (
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 animate-in fade-in duration-300">
+                    <div className="space-y-1">
+                        <label className="text-sm font-medium text-slate-700">Earned Premium (EP)</label>
+                        <div className="relative">
+                            <IndianRupee className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+                            <input type="number" step="0.01" min="0" value={formData.earnedPremium} onChange={e => setFormData({ ...formData, earnedPremium: e.target.value })} className="w-full pl-9 pr-3 py-2 bg-slate-50 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/20 transition-colors sm:text-sm font-medium" placeholder="Earned Premium" />
+                        </div>
+                    </div>
+                    <div className="space-y-1">
+                        <label className="text-sm font-medium text-slate-700">Premium Paying Term <span className="text-xs text-blue-500 font-normal">(Years)</span></label>
+                        <input type="number" min="1" max="100" value={formData.ppt} onChange={e => setFormData({ ...formData, ppt: e.target.value })} className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/20 transition-colors sm:text-sm" placeholder="e.g. 10" />
+                    </div>
+                    <div className="space-y-1">
+                        <label className="text-sm font-medium text-slate-700">Policy Term <span className="text-xs text-blue-500 font-normal">(Years)</span></label>
+                        <input type="number" min="1" max="100" value={formData.pt} onChange={e => setFormData({ ...formData, pt: e.target.value })} className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/20 transition-colors sm:text-sm" placeholder="e.g. 20" />
+                    </div>
+                </div>
+            );
         }
         if (formData.type === 'Other') {
             return (
@@ -533,16 +555,16 @@ export default function PolicyAddPage() {
                         </div>
                     </div>
 
-                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                    <div className={clsx("grid gap-4", formData.type === 'Life' ? "grid-cols-1 sm:grid-cols-3" : "grid-cols-1 sm:grid-cols-2")}>
                         <div className="space-y-1">
                             <label className="text-sm font-medium text-slate-700">Policy Number</label>
                             <div className="relative">
                                 <ShieldCheck className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
-                                <input type="text" value={formData.policyNo} onChange={e => setFormData({ ...formData, policyNo: e.target.value })} className="w-full pl-9 pr-3 py-2 bg-slate-50 border border-slate-200 rounded-lg font-mono focus:outline-none focus:ring-2 focus:ring-blue-500/20 transition-colors sm:text-sm" placeholder="Leave blank to auto-generate" />
+                                <input type="text" value={formData.policyNo} onChange={e => setFormData({ ...formData, policyNo: e.target.value })} className="w-full pl-9 pr-3 py-2 bg-slate-50 border border-slate-200 rounded-lg font-mono focus:outline-none focus:ring-2 focus:ring-blue-500/20 transition-colors sm:text-sm placeholder:lowercase placeholder:text-[13px]" placeholder="e.g. pol-2026-0001 or leave blank" />
                             </div>
                         </div>
                         <div className="space-y-1">
-                            <label className="text-sm font-medium text-slate-700">Annual Premium <span className="text-red-500">*</span></label>
+                            <label className="text-sm font-medium text-slate-700">Premium Amount <span className="text-red-500">*</span></label>
                             <div className="relative">
                                 <IndianRupee className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
                                 <input required type="number" step="0.01" min="0" value={formData.premium} onChange={e => {
@@ -558,32 +580,34 @@ export default function PolicyAddPage() {
                                 }} className="w-full pl-9 pr-3 py-2 bg-slate-50 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/20 transition-colors sm:text-sm font-semibold text-slate-900" placeholder="12000.00" />
                             </div>
                         </div>
-                        <div className="space-y-1">
-                            <label className="text-sm font-medium text-slate-700">Premium Mode <span className="text-red-500">*</span></label>
-                            <select value={formData.premiumMode} onChange={e => setFormData({ ...formData, premiumMode: e.target.value, customPremiumDays: '' })} className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/20 transition-colors sm:text-sm font-medium">
-                                <option value="ANNUAL">Annual</option>
-                                <option value="MONTHLY">Monthly</option>
-                                <option value="QUARTERLY">Quarterly</option>
-                                <option value="HALF_YEARLY">Half Yearly</option>
-                                <option value="CUSTOM_DAYS">Custom Days</option>
-                            </select>
-                        </div>
+                        {formData.type === 'Life' && (
+                            <div className="space-y-1">
+                                <label className="text-sm font-medium text-slate-700">Premium Mode <span className="text-red-500">*</span></label>
+                                <select value={formData.premiumMode} onChange={e => setFormData({ ...formData, premiumMode: e.target.value, customPremiumDays: '' })} className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/20 transition-colors sm:text-sm font-medium">
+                                    <option value="ANNUAL">Annual</option>
+                                    <option value="MONTHLY">Monthly</option>
+                                    <option value="QUARTERLY">Quarterly</option>
+                                    <option value="HALF_YEARLY">Half Yearly</option>
+                                    <option value="CUSTOM_DAYS">Custom Days</option>
+                                </select>
+                            </div>
+                        )}
                     </div>
 
-                    {formData.premiumMode === 'CUSTOM_DAYS' && (
+                    {formData.type === 'Life' && formData.premiumMode === 'CUSTOM_DAYS' && (
                         <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                            <div className="space-y-1">
+                            <div className="space-y-1 col-start-3">
                                 <label className="text-sm font-medium text-slate-700">Custom Days Interval</label>
                                 <input type="number" min="1" max="365" value={formData.customPremiumDays} onChange={e => setFormData({ ...formData, customPremiumDays: e.target.value })} className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/20 transition-colors sm:text-sm" placeholder="e.g. 90, 60" />
                             </div>
                         </div>
                     )}
 
-                    <div className={clsx("grid grid-cols-1 gap-4 border-t border-slate-100 pt-4", formData.type === 'Life' ? "sm:grid-cols-3" : "sm:grid-cols-2")}>
+                    <div className="grid grid-cols-1 gap-4 border-t border-slate-100 pt-4 sm:grid-cols-3">
                         <div className="space-y-1">
                             <div className="flex justify-between items-center">
-                                <label className="text-sm font-medium text-slate-700">Premium Paid</label>
-                                <span className={clsx("text-xs font-bold px-1.5 py-0.5 rounded",
+                                <label className="text-sm font-medium text-slate-700">Total Premium Paid</label>
+                                <span className={clsx("text-[10px] font-bold px-1.5 py-0.5 rounded",
                                     formData.paymentStatus === 'PAID' ? "bg-emerald-100 text-emerald-700" :
                                         formData.paymentStatus === 'PARTIAL' ? "bg-orange-100 text-orange-700" : "bg-red-100 text-red-700"
                                 )}>{formData.paymentStatus}</span>
@@ -600,19 +624,42 @@ export default function PolicyAddPage() {
                                         else if (pd > 0) ps = 'PARTIAL';
                                         return { ...prev, premiumPaid: val, paymentStatus: ps };
                                     });
-                                }} className="w-full pl-9 pr-3 py-2 bg-slate-50 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/20 transition-colors sm:text-sm font-medium text-emerald-700" placeholder="0.00" />
+                                }} className="w-full pl-9 pr-3 py-2 bg-slate-50 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/20 transition-colors sm:text-sm font-medium text-emerald-700" placeholder="Total deposit" />
                             </div>
                         </div>
-                        {formData.type === 'Life' && (
-                            <div className="space-y-1">
-                                <label className="text-sm font-medium text-slate-700">Earnings / EP</label>
-                                <div className="relative">
-                                    <IndianRupee className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
-                                    <input type="number" step="0.01" min="0" value={formData.earnedPremium} onChange={e => setFormData({ ...formData, earnedPremium: e.target.value })} className="w-full pl-9 pr-3 py-2 bg-slate-50 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/20 transition-colors sm:text-sm font-medium" placeholder="Earned Premium" />
+                        <div className="space-y-1">
+                            <label className="text-sm font-medium text-slate-700">Remaining Balance</label>
+                            <div className="relative">
+                                <IndianRupee className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+                                <div className={clsx("w-full pl-9 pr-3 py-2 bg-slate-100 border border-slate-200 rounded-lg sm:text-sm font-medium flex items-center h-[38px]",
+                                    (Number(formData.premium) - Number(formData.premiumPaid || 0)) > 0 ? "text-orange-600" : "text-slate-500"
+                                )}>
+                                    {Math.max(0, Number(formData.premium || 0) - Number(formData.premiumPaid || 0)).toFixed(2)}
                                 </div>
                             </div>
-                        )}
+                        </div>
                         <div className="space-y-1">
+                            <label className="text-sm font-medium text-slate-700">Estimated Next Due</label>
+                            <div className="relative">
+                                <SkipForward className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+                                <div className="w-full pl-9 pr-3 py-2 bg-slate-100 border border-slate-200 rounded-lg sm:text-sm font-medium text-slate-700 flex items-center h-[38px]">
+                                    {(() => {
+                                        if (!formData.startDate) return '-';
+                                        const d = new Date(formData.startDate);
+                                        if (isNaN(d.getTime())) return '-';
+
+                                        if (formData.premiumMode === 'MONTHLY') addMonths(d, 1);
+                                        else if (formData.premiumMode === 'QUARTERLY') addMonths(d, 3);
+                                        else if (formData.premiumMode === 'HALF_YEARLY') addMonths(d, 6);
+                                        else if (formData.premiumMode === 'ANNUAL') addMonths(d, 12);
+                                        else return 'Custom/At Expiry';
+
+                                        return format(d, 'MMM dd, yyyy');
+                                    })()}
+                                </div>
+                            </div>
+                        </div>
+                        <div className="space-y-1 col-span-1 sm:col-span-3">
                             <label className="text-sm font-medium text-slate-700">Policy Status</label>
                             <select value={formData.status} onChange={e => setFormData({ ...formData, status: e.target.value })} className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/20 transition-colors sm:text-sm font-medium">
                                 <option value="ACTIVE">ACTIVE</option>
@@ -626,18 +673,6 @@ export default function PolicyAddPage() {
                     </div>
 
                     {/* PPT & PT Section */}
-                    {formData.type === 'Life' && (
-                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 border-t border-slate-100 pt-4">
-                            <div className="space-y-1">
-                                <label className="text-sm font-medium text-slate-700">PPT <span className="text-xs text-blue-500 font-normal">(Premium Pay Terms — Years)</span></label>
-                                <input type="number" min="1" max="100" value={formData.ppt} onChange={e => setFormData({ ...formData, ppt: e.target.value })} className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/20 transition-colors sm:text-sm" placeholder="e.g. 10" />
-                            </div>
-                            <div className="space-y-1">
-                                <label className="text-sm font-medium text-slate-700">PT <span className="text-xs text-blue-500 font-normal">(Policy Terms — Years)</span></label>
-                                <input type="number" min="1" max="100" value={formData.pt} onChange={e => setFormData({ ...formData, pt: e.target.value })} className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/20 transition-colors sm:text-sm" placeholder="e.g. 20" />
-                            </div>
-                        </div>
-                    )}
 
                     {/* Dates & Tenure Section */}
                     <div className={clsx("grid grid-cols-1 gap-4 border-t border-slate-100 pt-4", formData.type === 'Life' ? "sm:grid-cols-2" : "sm:grid-cols-4")}>
@@ -684,7 +719,7 @@ export default function PolicyAddPage() {
                                 <p className="text-[10px] text-blue-500 font-medium">Auto-calculated from tenure</p>
                             )}
                             {formData.type === 'Life' && (
-                                <p className="text-[10px] text-blue-500 font-medium">Auto-calculated from PT (Policy Term)</p>
+                                <p className="text-[10px] text-blue-500 font-medium whitespace-nowrap">Maturity Date: Auto calculated based on PT ({formData.pt || 0} years)</p>
                             )}
                         </div>
                         {formData.type !== 'Life' && (

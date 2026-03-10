@@ -52,7 +52,7 @@ export default function ClientProfilePage() {
 
     // Document upload
     const [showDocUpload, setShowDocUpload] = useState(false);
-    const [docForm, setDocForm] = useState({ type: 'KYC', customTags: '' });
+    const [docForm, setDocForm] = useState({ type: 'Policy Document', customTags: '' });
     const [docFile, setDocFile] = useState<File | null>(null);
     const [docUrl, setDocUrl] = useState('');
     const [docUploadMode, setDocUploadMode] = useState<'file' | 'link'>('file');
@@ -145,7 +145,7 @@ export default function ClientProfilePage() {
                 customTags: docForm.customTags
             });
             setShowDocUpload(false);
-            setDocForm({ type: 'KYC', customTags: '' });
+            setDocForm({ type: 'Policy Document', customTags: '' });
             setDocFile(null);
             setDocUrl('');
             fetchClient();
@@ -473,7 +473,6 @@ export default function ClientProfilePage() {
                                         <div className="space-y-1">
                                             <label className="text-xs font-semibold text-slate-700 uppercase">Document Type</label>
                                             <select value={docForm.type} onChange={e => setDocForm({ ...docForm, type: e.target.value })} className="w-full px-3 py-2 bg-white border border-slate-200 rounded-lg text-sm">
-                                                <option value="KYC">KYC</option>
                                                 <option value="POLICY">Policy Copy</option>
                                                 <option value="PROPOSAL">Proposal</option>
                                                 <option value="CLAIM">Claim</option>

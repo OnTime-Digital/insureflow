@@ -38,7 +38,7 @@ export default function DocumentsPage() {
     const [uploadMode, setUploadMode] = useState<'file' | 'link'>('file');
     const [formData, setFormData] = useState({
         clientId: '',
-        type: 'KYC',
+        type: 'Policy Document',
         url: '',
         customTags: ''
     });
@@ -150,7 +150,7 @@ export default function DocumentsPage() {
 
     const handleCloseModal = () => {
         setIsUploadModalOpen(false);
-        setFormData({ clientId: '', type: 'KYC', url: '', customTags: '' });
+        setFormData({ clientId: '', type: 'Policy Document', url: '', customTags: '' });
         setDocumentFile(null);
         setUploadError('');
     };
@@ -192,7 +192,6 @@ export default function DocumentsPage() {
                 />
                 <select value={filterType} onChange={e => setFilterType(e.target.value)} className="w-full sm:w-48 px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20">
                     <option value="">All Types</option>
-                    <option value="KYC">KYC</option>
                     <option value="POLICY">Policy</option>
                     <option value="PROPOSAL">Proposal</option>
                     <option value="CLAIM">Claim</option>
@@ -337,7 +336,6 @@ export default function DocumentsPage() {
                                         onChange={e => setFormData({ ...formData, type: e.target.value })}
                                         className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 text-sm"
                                     >
-                                        <option value="KYC">KYC Document (ID, PAN, Aadhaar)</option>
                                         <option value="POLICY">Policy Copy</option>
                                         <option value="PROPOSAL">Proposal Form</option>
                                         <option value="CLAIM">Claim Document</option>

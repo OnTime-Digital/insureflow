@@ -6,6 +6,7 @@ interface User {
     name: string;
     email: string;
     role: string;
+    avatar?: string;
     mobile?: string | null;
     permissions?: string | null;
 }
@@ -16,6 +17,7 @@ interface AuthContextType {
     isAuthenticated: boolean;
     login: (token: string, user: User) => void;
     logout: () => void;
+    fetchUser: () => Promise<void>;
     loading: boolean;
 }
 
@@ -56,8 +58,22 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
         delete axios.defaults.headers.common['Authorization'];
     };
 
+    const fetchUser = async () => {
+        try {
+            if (token) {
+                const res = await axios.get('/api/auth/me');
+                const fetchedUser = res.data;
+                setUser(fetchedUser);
+                localStorage.setItem('user', JSON.stringify(fetchedUser));
+            }
+        } catch (error) {
+            console.error('Error fetching user:', error);
+            // Ignore failure, just keep whatever was previously set
+        }
+    }
+
     return (
-        <AuthContext.Provider value={{ user, token, isAuthenticated: !!token, login, logout, loading }}>
+        <AuthContext.Provider value={{ user, token, isAuthenticated: !!token, login, logout, fetchUser, loading }}>
             {children}
         </AuthContext.Provider>
     );

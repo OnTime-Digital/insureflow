@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import {
     Search, Plus, Edit, Trash2,
-    X, Phone, Mail, User,
+    X, Phone, Mail, User, CheckSquare,
     Download, Upload, Eye, ShieldCheck,
     ChevronLeft, ChevronRight,
     MessageCircle, PhoneCall, ChevronsUpDown
@@ -77,10 +77,6 @@ export default function ClientsPage() {
         const timer = setTimeout(() => setDebouncedSearch(searchQuery), 400);
         return () => clearTimeout(timer);
     }, [searchQuery]);
-
-    const setPage = (page: number) => {
-        setPagination(prev => ({ ...prev, page }));
-    };
 
     const fetchClients = useCallback(async (page = 1) => {
         try {
@@ -312,16 +308,6 @@ export default function ClientsPage() {
                     </p>
                 </div>
                 <div className="flex items-center gap-3">
-                    {selectedClientIds.length > 0 && (
-                        <button
-                            onClick={handleBulkDelete}
-                            className="flex items-center gap-2 bg-red-50 border border-red-200 hover:bg-red-100 text-red-700 px-4 py-2.5 rounded-xl text-sm font-semibold transition-colors shadow-sm"
-                        >
-                            <Trash2 className="w-4 h-4" />
-                            <span className="hidden sm:inline">Delete Selected ({selectedClientIds.length})</span>
-                        </button>
-                    )}
-
                     <button
                         onClick={handleExport}
                         disabled={isExporting}
@@ -410,9 +396,10 @@ export default function ClientsPage() {
                                 clients.map((client) => (
                                     <tr key={client.id} className={clsx(
                                         "hover:bg-slate-50/80 transition-colors group",
-                                        client.renewalUrgent && "bg-amber-50/40 hover:bg-amber-50/60"
+                                        client.renewalUrgent && "bg-amber-50/40 hover:bg-amber-50/60",
+                                        selectedClientIds.includes(client.id) && "bg-blue-50/60"
                                     )}>
-                                        <td className="px-4 py-3 text-center">
+                                        <td className="px-4 py-3 text-center w-12">
                                             <input
                                                 type="checkbox"
                                                 className="w-4 h-4 rounded border-slate-300 text-blue-600 focus:ring-blue-500 cursor-pointer"
@@ -547,6 +534,33 @@ export default function ClientsPage() {
                     </div>
                 )}
             </div>
+
+            {/* Floating Bulk Action Bar */}
+            {selectedClientIds.length > 0 && (
+                <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-50 animate-in slide-in-from-bottom-4 duration-300">
+                    <div className="flex items-center gap-3 bg-slate-900 text-white px-5 py-3 rounded-2xl shadow-2xl border border-slate-700">
+                        <div className="flex items-center gap-2">
+                            <CheckSquare className="w-4 h-4 text-blue-400" />
+                            <span className="text-sm font-semibold">{selectedClientIds.length} selected</span>
+                        </div>
+                        <div className="w-px h-6 bg-slate-600" />
+                        <button
+                            onClick={handleBulkDelete}
+                            className="flex items-center gap-1.5 bg-red-600 hover:bg-red-700 text-white px-3 py-1.5 rounded-lg text-sm font-medium transition-colors"
+                        >
+                            <Trash2 className="w-3.5 h-3.5" />
+                            Delete
+                        </button>
+                        <button
+                            onClick={() => setSelectedClientIds([])}
+                            className="p-1.5 text-slate-400 hover:text-white hover:bg-slate-700 rounded-lg transition-colors"
+                            title="Clear selection"
+                        >
+                            <X className="w-4 h-4" />
+                        </button>
+                    </div>
+                </div>
+            )}
 
             {/* Create / Edit Modal */}
             {isModalOpen && (

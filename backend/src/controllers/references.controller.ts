@@ -22,6 +22,14 @@ export const getReferences = async (req: Request, res: Response) => {
 
         const references = await prisma.reference.findMany({
             where,
+            include: {
+                _count: {
+                    select: {
+                        clients: true,
+                        policies: true
+                    }
+                }
+            },
             orderBy: { name: 'asc' }
         });
 
@@ -97,5 +105,27 @@ export const deleteReference = async (req: Request, res: Response) => {
     } catch (error) {
         console.error('Error deleting reference:', error);
         res.status(500).json({ error: 'Failed to delete reference' });
+    }
+};
+
+// Bulk delete references
+export const bulkDeleteReferences = async (req: Request, res: Response) => {
+    try {
+        const { ids } = req.body;
+
+        if (!Array.isArray(ids) || ids.length === 0) {
+            return res.status(400).json({ error: 'An array of reference IDs is required' });
+        }
+
+        const deleted = await prisma.reference.deleteMany({
+            where: {
+                id: { in: ids }
+            }
+        });
+
+        res.json({ message: `Successfully deleted ${deleted.count} references`, count: deleted.count });
+    } catch (error) {
+        console.error('Error bulk deleting references:', error);
+        res.status(500).json({ error: 'Failed to bulk delete references' });
     }
 };

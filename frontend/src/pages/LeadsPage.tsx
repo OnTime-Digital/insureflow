@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import {
-    Search, Plus, Edit, Trash2, X,
+    Search, Plus, Edit, Trash2, X, CheckSquare,
     Phone, Mail, UserPlus, FileText, User,
     LayoutGrid, List, ChevronRight, GripVertical
 } from 'lucide-react';
@@ -49,6 +49,9 @@ export default function LeadsPage() {
     // Drag-and-drop state
     const [draggedLeadId, setDraggedLeadId] = useState<string | null>(null);
     const [dropTargetStatus, setDropTargetStatus] = useState<string | null>(null);
+
+    // Bulk select state
+    const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
 
     const fetchData = async () => {
         try {
@@ -121,6 +124,37 @@ export default function LeadsPage() {
             console.error("Error deleting lead:", error);
             alert("Failed to delete lead.");
         }
+    };
+
+    // Bulk select helpers
+    const toggleSelect = (id: string) => {
+        setSelectedIds(prev => {
+            const next = new Set(prev);
+            if (next.has(id)) next.delete(id); else next.add(id);
+            return next;
+        });
+    };
+    const toggleSelectAll = () => {
+        if (selectedIds.size === filteredLeads.length) setSelectedIds(new Set());
+        else setSelectedIds(new Set(filteredLeads.map(l => l.id)));
+    };
+    const clearSelection = () => setSelectedIds(new Set());
+
+    const handleBulkDelete = async () => {
+        if (!window.confirm(`Delete ${selectedIds.size} selected leads? This cannot be undone.`)) return;
+        try {
+            await axios.post('/api/leads/bulk-delete', { leadIds: Array.from(selectedIds) });
+            clearSelection();
+            fetchData();
+        } catch { alert('Failed to bulk delete.'); }
+    };
+
+    const handleBulkStatus = async (status: string) => {
+        try {
+            await axios.put('/api/leads/bulk-status', { leadIds: Array.from(selectedIds), status });
+            clearSelection();
+            fetchData();
+        } catch { alert('Failed to bulk update status.'); }
     };
 
     const updateLeadStatusQuick = async (id: string, newStatus: string) => {
@@ -252,6 +286,14 @@ export default function LeadsPage() {
                         <table className="w-full text-left text-sm">
                             <thead className="bg-slate-50 border-b border-slate-100 text-xs font-semibold text-slate-500 uppercase tracking-wider">
                                 <tr>
+                                    <th className="px-4 py-3 w-10">
+                                        <input
+                                            type="checkbox"
+                                            checked={filteredLeads.length > 0 && selectedIds.size === filteredLeads.length}
+                                            onChange={toggleSelectAll}
+                                            className="w-4 h-4 rounded border-slate-300 text-blue-600 focus:ring-blue-500/20 cursor-pointer"
+                                        />
+                                    </th>
                                     <th className="px-4 py-3">Prospect Info</th>
                                     <th className="px-4 py-3">Pipeline Status</th>
                                     <th className="px-4 py-3">Required Policy</th>
@@ -278,7 +320,15 @@ export default function LeadsPage() {
                                     </tr>
                                 ) : (
                                     filteredLeads.map((lead) => (
-                                        <tr key={lead.id} className="hover:bg-slate-50/80 transition-colors group">
+                                        <tr key={lead.id} className={clsx("hover:bg-slate-50/80 transition-colors group", selectedIds.has(lead.id) && "bg-blue-50/60")}>
+                                            <td className="px-4 py-3 w-10">
+                                                <input
+                                                    type="checkbox"
+                                                    checked={selectedIds.has(lead.id)}
+                                                    onChange={() => toggleSelect(lead.id)}
+                                                    className="w-4 h-4 rounded border-slate-300 text-blue-600 focus:ring-blue-500/20 cursor-pointer"
+                                                />
+                                            </td>
                                             <td className="px-4 py-3">
                                                 <div className="flex items-center gap-3">
                                                     <div className="w-10 h-10 rounded-full bg-indigo-100 text-indigo-700 font-bold flex items-center justify-center shrink-0">
@@ -473,6 +523,41 @@ export default function LeadsPage() {
                             })}
                         </div>
                     )}
+                </div>
+            )}
+
+            {/* Floating Bulk Action Bar */}
+            {viewMode === 'table' && selectedIds.size > 0 && (
+                <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-50 animate-in slide-in-from-bottom-4 duration-300">
+                    <div className="flex items-center gap-3 bg-slate-900 text-white px-5 py-3 rounded-2xl shadow-2xl border border-slate-700">
+                        <div className="flex items-center gap-2">
+                            <CheckSquare className="w-4 h-4 text-blue-400" />
+                            <span className="text-sm font-semibold">{selectedIds.size} selected</span>
+                        </div>
+                        <div className="w-px h-6 bg-slate-600" />
+                        <select
+                            defaultValue=""
+                            onChange={e => { if (e.target.value) { handleBulkStatus(e.target.value); e.target.value = ''; } }}
+                            className="bg-slate-800 text-white text-sm px-3 py-1.5 rounded-lg border border-slate-600 cursor-pointer hover:bg-slate-700 transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500/40"
+                        >
+                            <option value="" disabled>Change Status...</option>
+                            {LEAD_STATUSES.map(s => <option key={s} value={s}>Set {s.replace('_', ' ')}</option>)}
+                        </select>
+                        <button
+                            onClick={handleBulkDelete}
+                            className="flex items-center gap-1.5 bg-red-600 hover:bg-red-700 text-white px-3 py-1.5 rounded-lg text-sm font-medium transition-colors"
+                        >
+                            <Trash2 className="w-3.5 h-3.5" />
+                            Delete
+                        </button>
+                        <button
+                            onClick={clearSelection}
+                            className="p-1.5 text-slate-400 hover:text-white hover:bg-slate-700 rounded-lg transition-colors"
+                            title="Clear selection"
+                        >
+                            <X className="w-4 h-4" />
+                        </button>
+                    </div>
                 </div>
             )}
 

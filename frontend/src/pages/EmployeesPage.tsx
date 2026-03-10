@@ -112,7 +112,7 @@ export default function EmployeesPage() {
 
     const handleToggleClick = async (emp: Employee) => {
         if (emp.isActive) {
-            const totalAssignments = emp._count.assignedPolicies + emp._count.assignedRenewals + emp._count.assignedLeads + (emp._count.assignedClients || 0) + (emp._count.assignedDocuments || 0);
+            const totalAssignments = (emp._count?.assignedPolicies || 0) + (emp._count?.assignedRenewals || 0) + (emp._count?.assignedLeads || 0) + (emp._count?.assignedClients || 0) + (emp._count?.assignedDocuments || 0);
             if (totalAssignments > 0) {
                 setReassignModal({ isOpen: true, emp });
                 setSelectedReassignTo('');
@@ -243,9 +243,9 @@ export default function EmployeesPage() {
                                         </td>
                                         <td className="px-4 py-3">
                                             <div className="flex gap-2">
-                                                <span className="text-xs bg-blue-50 text-blue-700 px-2 py-0.5 rounded-full font-medium">{emp._count.assignedPolicies}P</span>
-                                                <span className="text-xs bg-orange-50 text-orange-700 px-2 py-0.5 rounded-full font-medium">{emp._count.assignedRenewals}R</span>
-                                                <span className="text-xs bg-purple-50 text-purple-700 px-2 py-0.5 rounded-full font-medium">{emp._count.assignedLeads}L</span>
+                                                <span className="text-xs bg-blue-50 text-blue-700 px-2 py-0.5 rounded-full font-medium">{emp._count?.assignedPolicies || 0}P</span>
+                                                <span className="text-xs bg-orange-50 text-orange-700 px-2 py-0.5 rounded-full font-medium">{emp._count?.assignedRenewals || 0}R</span>
+                                                <span className="text-xs bg-purple-50 text-purple-700 px-2 py-0.5 rounded-full font-medium">{emp._count?.assignedLeads || 0}L</span>
                                             </div>
                                         </td>
                                         <td className="px-4 py-3">

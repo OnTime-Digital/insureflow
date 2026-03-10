@@ -74,8 +74,13 @@ app.use('/api/audit', auditRoutes);
 app.use('/api/monthly-reports', monthlyReportsRoutes);
 app.use('/api/policy-documents', policyDocumentsRoutes);
 
-// Static uploads serving
-app.use('/uploads', express.static(path.join(process.cwd(), 'uploads')));
+// Static uploads serving with explicit CORS
+app.use('/uploads', cors(), express.static(path.join(process.cwd(), 'uploads'), {
+    setHeaders: (res, filePath) => {
+        res.set('Access-Control-Allow-Origin', '*');
+        res.set('Cross-Origin-Resource-Policy', 'cross-origin');
+    }
+}));
 
 app.use((err: Error, req: Request, res: Response, next: NextFunction) => {
     console.error(err.stack);

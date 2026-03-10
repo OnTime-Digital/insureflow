@@ -1,10 +1,17 @@
 import { useState, useEffect } from 'react';
-import { Building2, Globe, Mail, Save, Image as ImageIcon, FileText, Plus, Trash2, Palette } from 'lucide-react';
+import { FileText, Save, Image as ImageIcon, Plus, Trash2, Palette, User } from 'lucide-react';
 import clsx from 'clsx';
 import axios from 'axios';
+import { useLocation, useNavigate } from 'react-router-dom';
+import { useAuth } from '../contexts/AuthContext';
 
 export default function SettingsPage() {
-    const [activeTab, setActiveTab] = useState<'company' | 'global' | 'integrations' | 'paymentTerms' | 'branding'>('company');
+    const location = useLocation();
+    const navigate = useNavigate();
+    const searchParams = new URLSearchParams(location.search);
+    const initialTab = (searchParams.get('tab') as any) || 'profile';
+
+    const [activeTab, setActiveTab] = useState<'profile' | 'branding' | 'paymentTerms'>(initialTab);
     const [isSaving, setIsSaving] = useState(false);
     const [saveSuccess, setSaveSuccess] = useState(false);
     const [paymentTermsTemplates, setPaymentTermsTemplates] = useState<string[]>([]);
@@ -19,6 +26,33 @@ export default function SettingsPage() {
     });
     const [logoFile, setLogoFile] = useState<File | null>(null);
     const [faviconFile, setFaviconFile] = useState<File | null>(null);
+
+    // Profile State
+    const { user, fetchUser } = useAuth();
+    const [profileName, setProfileName] = useState('');
+    const [profileEmail, setProfileEmail] = useState('');
+    const [avatarFile, setAvatarFile] = useState<File | null>(null);
+    const [currentPassword, setCurrentPassword] = useState('');
+    const [newPassword, setNewPassword] = useState('');
+    const [confirmPassword, setConfirmPassword] = useState('');
+    const [profileError, setProfileError] = useState('');
+
+    useEffect(() => {
+        if (user) {
+            setProfileName(user.name);
+            setProfileEmail(user.email);
+        }
+    }, [user]);
+
+    // Sync tab with URL parameter
+    useEffect(() => {
+        const tab = searchParams.get('tab');
+        if (tab && ['profile', 'branding', 'paymentTerms'].includes(tab)) {
+            setActiveTab(tab as any);
+        } else if (!tab) {
+            setActiveTab('profile');
+        }
+    }, [location.search]);
 
     // Fetch payment terms templates from settings
     useEffect(() => {
@@ -75,6 +109,7 @@ export default function SettingsPage() {
                 report_footer_text: branding.report_footer_text
             });
             setBranding(prev => ({ ...prev, logo_url: logoUrl, favicon_url: faviconUrl }));
+            setBranding(prev => ({ ...prev, logo_url: logoUrl, favicon_url: faviconUrl }));
             setLogoFile(null);
             setFaviconFile(null);
             setSaveSuccess(true);
@@ -86,12 +121,63 @@ export default function SettingsPage() {
         }
     };
 
+    const handleSaveProfile = async () => {
+        setIsSaving(true);
+        setProfileError('');
+        setSaveSuccess(false);
+
+        try {
+            // Upload Avatar if changed
+            let avatarUrl = user?.avatar;
+            if (avatarFile) {
+                const formData = new FormData();
+                formData.append('document', avatarFile);
+                const uploadRes = await axios.post('/api/upload', formData, { headers: { 'Content-Type': 'multipart/form-data' } });
+                avatarUrl = uploadRes.data.url;
+            }
+
+            // Update Profile Name, Email & Avatar
+            if (profileName !== user?.name || profileEmail !== user?.email || avatarFile) {
+                await axios.put('/api/update-profile', { name: profileName, email: profileEmail, avatar: avatarUrl });
+                await fetchUser(); // Refresh global auth state
+                setAvatarFile(null);
+            }
+
+            // Change Password if requested
+            if (currentPassword || newPassword || confirmPassword) {
+                if (newPassword !== confirmPassword) {
+                    setProfileError('New passwords do not match');
+                    setIsSaving(false);
+                    return;
+                }
+                if (!currentPassword) {
+                    setProfileError('Current password is required to set a new password');
+                    setIsSaving(false);
+                    return;
+                }
+                await axios.post('/api/change-password', {
+                    currentPassword,
+                    newPassword
+                });
+                setCurrentPassword('');
+                setNewPassword('');
+                setConfirmPassword('');
+            }
+
+            setSaveSuccess(true);
+            setTimeout(() => setSaveSuccess(false), 3000);
+        } catch (err: any) {
+            console.error('Error saving profile:', err);
+            setProfileError(err.response?.data?.error || 'Failed to update profile');
+        } finally {
+            setIsSaving(false);
+        }
+    };
+
     const tabs = [
-        { id: 'company', label: 'Company Profile', icon: Building2 },
-        { id: 'branding', label: 'Brand Settings', icon: Palette },
-        { id: 'global', label: 'Global Settings', icon: Globe },
-        { id: 'paymentTerms', label: 'Payment Terms', icon: FileText },
-        { id: 'integrations', label: 'Integrations', icon: Mail }
+        { id: 'profile', label: 'My Profile', icon: User },
+        { id: 'branding', label: 'Brand Identity', icon: Palette },
+        { id: 'paymentTerms', label: 'Payment Terms', icon: FileText }
     ] as const;
 
     return (
@@ -99,10 +185,10 @@ export default function SettingsPage() {
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                 <div>
                     <h1 className="text-2xl font-bold tracking-tight text-slate-900">Settings</h1>
-                    <p className="text-sm text-slate-500 mt-1">Manage your organization's preferences and integrations.</p>
+                    <p className="text-sm text-slate-500 mt-1">Manage your organization's core preferences.</p>
                 </div>
                 <button
-                    onClick={handleSave}
+                    onClick={activeTab === 'profile' ? handleSaveProfile : handleSave}
                     disabled={isSaving}
                     className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors shadow-sm disabled:opacity-70"
                 >
@@ -124,7 +210,10 @@ export default function SettingsPage() {
                         {tabs.map(tab => (
                             <button
                                 key={tab.id}
-                                onClick={() => setActiveTab(tab.id)}
+                                onClick={() => {
+                                    setActiveTab(tab.id as any);
+                                    navigate(`/settings?tab=${tab.id}`);
+                                }}
                                 className={clsx(
                                     "flex items-center gap-3 px-4 py-3 rounded-xl transition-all text-sm font-medium whitespace-nowrap",
                                     activeTab === tab.id
@@ -143,100 +232,202 @@ export default function SettingsPage() {
                 <div className="flex-1 min-w-0">
                     <div className="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
 
-                        {/* Company Profile Tab */}
-                        {activeTab === 'company' && (
+                        {/* Brand Identity Tab */}
+                        {activeTab === 'branding' && (
                             <div className="p-6 sm:p-8 animate-in fade-in zoom-in-95 duration-200">
-                                <h2 className="text-lg font-bold text-slate-900 mb-6">Company Profile</h2>
+                                <h2 className="text-lg font-bold text-slate-900 mb-6">Brand Identity & Profile</h2>
+                                <p className="text-sm text-slate-500 mb-6">Configure your software identity — logo, company name, favicon, and colors used across the app and PDF reports.</p>
 
                                 <div className="space-y-6">
+                                    {/* Logo Upload */}
                                     <div className="flex items-center gap-6 pb-6 border-b border-slate-100">
-                                        <div className="w-24 h-24 bg-slate-50 border border-slate-200 rounded-2xl flex items-center justify-center border-dashed">
-                                            <ImageIcon className="w-8 h-8 text-slate-300" />
+                                        <div className="w-24 h-24 bg-slate-50 border border-slate-200 rounded-2xl flex items-center justify-center overflow-hidden border-dashed relative">
+                                            {branding.logo_url ? (
+                                                <img
+                                                    src={branding.logo_url.startsWith('http') ? branding.logo_url : `http://localhost:5005${branding.logo_url}`}
+                                                    alt="Logo"
+                                                    className="w-full h-full object-contain"
+                                                    onError={(e) => {
+                                                        // Fallback to placeholder if image load fails
+                                                        e.currentTarget.style.display = 'none';
+                                                        e.currentTarget.nextElementSibling?.classList.remove('hidden');
+                                                    }}
+                                                />
+                                            ) : null}
+                                            <ImageIcon className={clsx("w-8 h-8 text-slate-300", branding.logo_url && "hidden absolute")} />
                                         </div>
                                         <div>
                                             <h3 className="text-sm font-medium text-slate-900 mb-1">Company Logo</h3>
-                                            <p className="text-xs text-slate-500 mb-3">Recommended size 256x256px. PNG, JPG max 2MB.</p>
-                                            <button className="px-3 py-1.5 bg-white border border-slate-300 text-slate-700 rounded-lg text-sm font-medium hover:bg-slate-50 transition-colors">
-                                                Upload Logo
-                                            </button>
+                                            <p className="text-xs text-slate-500 mb-3">Used in sidebar, PDF headers. PNG/JPG, max 2MB.</p>
+                                            <input
+                                                type="file"
+                                                accept="image/*"
+                                                onChange={e => setLogoFile(e.target.files?.[0] || null)}
+                                                className="block text-sm text-slate-500 file:mr-2 file:py-1.5 file:px-3 file:rounded-md file:border-0 file:text-xs file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100 cursor-pointer"
+                                            />
+                                            {logoFile && <p className="text-xs text-green-600 mt-1 font-medium">New file selected: {logoFile.name}</p>}
                                         </div>
                                     </div>
 
+                                    {/* Favicon Upload */}
+                                    <div className="flex items-center gap-6 pb-6 border-b border-slate-100">
+                                        <div className="w-16 h-16 bg-slate-50 border border-slate-200 rounded-xl flex items-center justify-center overflow-hidden border-dashed relative">
+                                            {branding.favicon_url ? (
+                                                <img
+                                                    src={branding.favicon_url.startsWith('http') ? branding.favicon_url : `http://localhost:5005${branding.favicon_url}`}
+                                                    alt="Favicon"
+                                                    className="w-full h-full object-contain"
+                                                    onError={(e) => {
+                                                        // Fallback to placeholder if image load fails
+                                                        e.currentTarget.style.display = 'none';
+                                                        e.currentTarget.nextElementSibling?.classList.remove('hidden');
+                                                    }}
+                                                />
+                                            ) : null}
+                                            <ImageIcon className={clsx("w-5 h-5 text-slate-300", branding.favicon_url && "hidden absolute")} />
+                                        </div>
+                                        <div>
+                                            <h3 className="text-sm font-medium text-slate-900 mb-1">Favicon</h3>
+                                            <p className="text-xs text-slate-500 mb-3">Browser tab icon. 32x32px or 64x64px recommended.</p>
+                                            <input
+                                                type="file"
+                                                accept="image/*"
+                                                onChange={e => setFaviconFile(e.target.files?.[0] || null)}
+                                                className="block text-sm text-slate-500 file:mr-2 file:py-1.5 file:px-3 file:rounded-md file:border-0 file:text-xs file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100 cursor-pointer"
+                                            />
+                                            {faviconFile && <p className="text-xs text-green-600 mt-1 font-medium">New file selected: {faviconFile.name}</p>}
+                                        </div>
+                                    </div>
+
+                                    {/* Branding Fields */}
                                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
                                         <div className="space-y-1.5">
+                                            <label className="text-sm font-medium text-slate-700">App Name</label>
+                                            <input type="text" value={branding.app_name} onChange={e => setBranding({ ...branding, app_name: e.target.value })} className="w-full px-3 py-2 bg-white border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-shadow text-sm" placeholder="e.g. InsureFlow – CompanyName" />
+                                        </div>
+                                        <div className="space-y-1.5">
                                             <label className="text-sm font-medium text-slate-700">Company Name</label>
-                                            <input type="text" defaultValue="InsureFlow Corp." className="w-full px-3 py-2 bg-white border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-shadow text-sm" />
+                                            <input type="text" value={branding.company_name} onChange={e => setBranding({ ...branding, company_name: e.target.value })} className="w-full px-3 py-2 bg-white border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-shadow text-sm" placeholder="Your Company Name" />
                                         </div>
                                         <div className="space-y-1.5">
-                                            <label className="text-sm font-medium text-slate-700">Tax ID / PAN</label>
-                                            <input type="text" defaultValue="ABCDE1234F" className="w-full px-3 py-2 bg-white border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-shadow text-sm" />
-                                        </div>
-                                        <div className="space-y-1.5">
-                                            <label className="text-sm font-medium text-slate-700">Support Email</label>
-                                            <input type="email" defaultValue="support@insureflow.com" className="w-full px-3 py-2 bg-white border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-shadow text-sm" />
-                                        </div>
-                                        <div className="space-y-1.5">
-                                            <label className="text-sm font-medium text-slate-700">Support Phone</label>
-                                            <input type="text" defaultValue="+1 (555) 123-4567" className="w-full px-3 py-2 bg-white border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-shadow text-sm" />
+                                            <label className="text-sm font-medium text-slate-700">Primary Color</label>
+                                            <div className="flex gap-2 items-center">
+                                                <input type="color" value={branding.primary_color} onChange={e => setBranding({ ...branding, primary_color: e.target.value })} className="w-10 h-10 rounded-lg border border-slate-200 cursor-pointer" />
+                                                <input type="text" value={branding.primary_color} onChange={e => setBranding({ ...branding, primary_color: e.target.value })} className="flex-1 px-3 py-2 bg-white border border-slate-300 rounded-lg text-sm font-mono" />
+                                            </div>
                                         </div>
                                         <div className="sm:col-span-2 space-y-1.5">
-                                            <label className="text-sm font-medium text-slate-700">Headquarters Address</label>
-                                            <textarea rows={3} defaultValue="123 Insurance Blvd, Suite 400&#10;New York, NY 10001" className="w-full px-3 py-2 bg-white border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-shadow text-sm"></textarea>
+                                            <label className="text-sm font-medium text-slate-700">Report Footer Text</label>
+                                            <textarea rows={2} value={branding.report_footer_text} onChange={e => setBranding({ ...branding, report_footer_text: e.target.value })} className="w-full px-3 py-2 bg-white border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/20 transition-shadow text-sm resize-none" placeholder="Text shown in PDF report footers..." />
                                         </div>
                                     </div>
                                 </div>
                             </div>
                         )}
 
-                        {/* Global Settings Tab */}
-                        {activeTab === 'global' && (
+                        {/* My Profile Tab */}
+                        {activeTab === 'profile' && (
                             <div className="p-6 sm:p-8 animate-in fade-in zoom-in-95 duration-200">
-                                <h2 className="text-lg font-bold text-slate-900 mb-6">Global Settings</h2>
+                                <h2 className="text-lg font-bold text-slate-900 mb-6">Personal Account Settings</h2>
+                                <p className="text-sm text-slate-500 mb-6">Manage your profile picture, display name, and security credentials.</p>
 
-                                <div className="space-y-5">
-                                    <div className="space-y-1.5">
-                                        <label className="text-sm font-medium text-slate-700">Default Currency</label>
-                                        <select className="w-full sm:w-1/2 px-3 py-2 bg-white border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-shadow text-sm">
-                                            <option value="INR">INR (₹)</option>
-                                            <option value="EUR">EUR (€)</option>
-                                            <option value="GBP">GBP (£)</option>
-                                        </select>
+                                {profileError && (
+                                    <div className="p-3 mb-6 bg-red-50 text-red-700 border border-red-200 rounded-lg text-sm font-medium animate-in slide-in-from-top-2">
+                                        {profileError}
                                     </div>
-                                    <div className="space-y-1.5">
-                                        <label className="text-sm font-medium text-slate-700">Date Format</label>
-                                        <select className="w-full sm:w-1/2 px-3 py-2 bg-white border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-shadow text-sm">
-                                            <option value="MM/DD/YYYY">MM/DD/YYYY (12/31/2026)</option>
-                                            <option value="DD/MM/YYYY">DD/MM/YYYY (31/12/2026)</option>
-                                            <option value="YYYY-MM-DD">YYYY-MM-DD (2026-12-31)</option>
-                                        </select>
-                                    </div>
-                                    <div className="space-y-1.5">
-                                        <label className="text-sm font-medium text-slate-700">Timezone</label>
-                                        <select className="w-full sm:w-1/2 px-3 py-2 bg-white border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-shadow text-sm">
-                                            <option value="UTC">UTC (Coordinated Universal Time)</option>
-                                            <option value="America/New_York">Eastern Time (US & Canada)</option>
-                                            <option value="Asia/Kolkata">India Standard Time (IST)</option>
-                                        </select>
+                                )}
+
+                                <div className="space-y-6">
+                                    {/* Avatar Upload */}
+                                    <div className="flex items-center gap-6 pb-6 border-b border-slate-100">
+                                        <div className="w-24 h-24 bg-slate-50 border border-slate-200 rounded-full flex items-center justify-center overflow-hidden border-dashed relative">
+                                            {user?.avatar && !avatarFile ? (
+                                                <img
+                                                    src={user.avatar.startsWith('http') ? user.avatar : `http://localhost:5005${user.avatar}`}
+                                                    alt="Avatar"
+                                                    className="w-full h-full object-cover"
+                                                    onError={(e) => {
+                                                        e.currentTarget.style.display = 'none';
+                                                        e.currentTarget.nextElementSibling?.classList.remove('hidden');
+                                                    }}
+                                                />
+                                            ) : avatarFile ? (
+                                                <img
+                                                    src={URL.createObjectURL(avatarFile)}
+                                                    alt="New Avatar"
+                                                    className="w-full h-full object-cover"
+                                                />
+                                            ) : (
+                                                <span className="text-3xl font-bold text-slate-300">{user?.name?.[0]?.toUpperCase() || 'U'}</span>
+                                            )}
+                                        </div>
+                                        <div>
+                                            <h3 className="text-sm font-medium text-slate-900 mb-1">Profile Photo</h3>
+                                            <p className="text-xs text-slate-500 mb-3">Square image recommended. PNG/JPG, max 2MB.</p>
+                                            <input
+                                                type="file"
+                                                accept="image/*"
+                                                onChange={e => setAvatarFile(e.target.files?.[0] || null)}
+                                                className="block text-sm text-slate-500 file:mr-2 file:py-1.5 file:px-3 file:rounded-full file:border-0 file:text-xs file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100 cursor-pointer"
+                                            />
+                                        </div>
                                     </div>
 
-                                    <div className="pt-4 border-t border-slate-100 mt-6">
-                                        <label className="flex items-center gap-3">
-                                            <input type="checkbox" defaultChecked className="w-4 h-4 text-blue-600 rounded border-slate-300 focus:ring-blue-500" />
-                                            <div>
-                                                <p className="text-sm font-medium text-slate-900">Enable Email Notifications</p>
-                                                <p className="text-xs text-slate-500">Automatically send emails for policy renewals and updates.</p>
-                                            </div>
-                                        </label>
+                                    {/* Profile Fields */}
+                                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-5 pb-6 border-b border-slate-100">
+                                        <div className="space-y-1.5">
+                                            <label className="text-sm font-medium text-slate-700">Full Name</label>
+                                            <input
+                                                type="text"
+                                                value={profileName}
+                                                onChange={e => setProfileName(e.target.value)}
+                                                className="w-full px-3 py-2 bg-white border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-shadow text-sm"
+                                            />
+                                        </div>
+                                        <div className="space-y-1.5">
+                                            <label className="text-sm font-medium text-slate-700">Email Address</label>
+                                            <input
+                                                type="email"
+                                                value={profileEmail}
+                                                onChange={e => setProfileEmail(e.target.value)}
+                                                className="w-full px-3 py-2 bg-white border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-shadow text-sm"
+                                            />
+                                        </div>
                                     </div>
-                                    <div className="pt-2">
-                                        <label className="flex items-center gap-3">
-                                            <input type="checkbox" defaultChecked className="w-4 h-4 text-blue-600 rounded border-slate-300 focus:ring-blue-500" />
-                                            <div>
-                                                <p className="text-sm font-medium text-slate-900">SMS Reminders</p>
-                                                <p className="text-xs text-slate-500">Enable SMS notifications for clients (requires SMS provider integration).</p>
-                                            </div>
-                                        </label>
+
+                                    {/* Password Change */}
+                                    <div className="space-y-5 lg:w-1/2">
+                                        <h3 className="text-sm font-semibold text-slate-900">Change Password</h3>
+                                        <div className="space-y-1.5">
+                                            <label className="text-sm font-medium text-slate-700">Current Password</label>
+                                            <input
+                                                type="password"
+                                                value={currentPassword}
+                                                onChange={e => setCurrentPassword(e.target.value)}
+                                                className="w-full px-3 py-2 bg-white border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-shadow text-sm"
+                                                placeholder="Enter current password to authorize changes"
+                                            />
+                                        </div>
+                                        <div className="space-y-1.5">
+                                            <label className="text-sm font-medium text-slate-700">New Password</label>
+                                            <input
+                                                type="password"
+                                                value={newPassword}
+                                                onChange={e => setNewPassword(e.target.value)}
+                                                className="w-full px-3 py-2 bg-white border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-shadow text-sm"
+                                            />
+                                        </div>
+                                        <div className="space-y-1.5">
+                                            <label className="text-sm font-medium text-slate-700">Confirm New Password</label>
+                                            <input
+                                                type="password"
+                                                value={confirmPassword}
+                                                onChange={e => setConfirmPassword(e.target.value)}
+                                                className="w-full px-3 py-2 bg-white border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-shadow text-sm"
+                                            />
+                                        </div>
                                     </div>
+
                                 </div>
                             </div>
                         )}
@@ -303,151 +494,6 @@ export default function SettingsPage() {
                                         ))}
                                     </div>
                                 )}
-                            </div>
-                        )}
-
-                        {/* Brand Settings Tab */}
-                        {activeTab === 'branding' && (
-                            <div className="p-6 sm:p-8 animate-in fade-in zoom-in-95 duration-200">
-                                <h2 className="text-lg font-bold text-slate-900 mb-6">Brand Settings</h2>
-                                <p className="text-sm text-slate-500 mb-6">Configure your software identity — logo, name, favicon, and colors used across the app and PDF reports.</p>
-
-                                <div className="space-y-6">
-                                    {/* Logo Upload */}
-                                    <div className="flex items-center gap-6 pb-6 border-b border-slate-100">
-                                        <div className="w-24 h-24 bg-slate-50 border border-slate-200 rounded-2xl flex items-center justify-center overflow-hidden border-dashed">
-                                            {branding.logo_url ? (
-                                                <img src={branding.logo_url} alt="Logo" className="w-full h-full object-contain" />
-                                            ) : (
-                                                <ImageIcon className="w-8 h-8 text-slate-300" />
-                                            )}
-                                        </div>
-                                        <div>
-                                            <h3 className="text-sm font-medium text-slate-900 mb-1">Company Logo</h3>
-                                            <p className="text-xs text-slate-500 mb-3">Used in sidebar, PDF headers. PNG/JPG, max 2MB.</p>
-                                            <input
-                                                type="file"
-                                                accept="image/*"
-                                                onChange={e => setLogoFile(e.target.files?.[0] || null)}
-                                                className="block text-sm text-slate-500 file:mr-2 file:py-1.5 file:px-3 file:rounded-md file:border-0 file:text-xs file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100 cursor-pointer"
-                                            />
-                                            {logoFile && <p className="text-xs text-green-600 mt-1 font-medium">New file selected: {logoFile.name}</p>}
-                                        </div>
-                                    </div>
-
-                                    {/* Favicon Upload */}
-                                    <div className="flex items-center gap-6 pb-6 border-b border-slate-100">
-                                        <div className="w-16 h-16 bg-slate-50 border border-slate-200 rounded-xl flex items-center justify-center overflow-hidden border-dashed">
-                                            {branding.favicon_url ? (
-                                                <img src={branding.favicon_url} alt="Favicon" className="w-full h-full object-contain" />
-                                            ) : (
-                                                <ImageIcon className="w-5 h-5 text-slate-300" />
-                                            )}
-                                        </div>
-                                        <div>
-                                            <h3 className="text-sm font-medium text-slate-900 mb-1">Favicon</h3>
-                                            <p className="text-xs text-slate-500 mb-3">Browser tab icon. 32x32px or 64x64px recommended.</p>
-                                            <input
-                                                type="file"
-                                                accept="image/*"
-                                                onChange={e => setFaviconFile(e.target.files?.[0] || null)}
-                                                className="block text-sm text-slate-500 file:mr-2 file:py-1.5 file:px-3 file:rounded-md file:border-0 file:text-xs file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100 cursor-pointer"
-                                            />
-                                            {faviconFile && <p className="text-xs text-green-600 mt-1 font-medium">New file selected: {faviconFile.name}</p>}
-                                        </div>
-                                    </div>
-
-                                    {/* Branding Fields */}
-                                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
-                                        <div className="space-y-1.5">
-                                            <label className="text-sm font-medium text-slate-700">App Name</label>
-                                            <input type="text" value={branding.app_name} onChange={e => setBranding({ ...branding, app_name: e.target.value })} className="w-full px-3 py-2 bg-white border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-shadow text-sm" placeholder="e.g. InsureFlow – CompanyName" />
-                                        </div>
-                                        <div className="space-y-1.5">
-                                            <label className="text-sm font-medium text-slate-700">Company Name</label>
-                                            <input type="text" value={branding.company_name} onChange={e => setBranding({ ...branding, company_name: e.target.value })} className="w-full px-3 py-2 bg-white border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-shadow text-sm" placeholder="Your Company Name" />
-                                        </div>
-                                        <div className="space-y-1.5">
-                                            <label className="text-sm font-medium text-slate-700">Primary Color</label>
-                                            <div className="flex gap-2 items-center">
-                                                <input type="color" value={branding.primary_color} onChange={e => setBranding({ ...branding, primary_color: e.target.value })} className="w-10 h-10 rounded-lg border border-slate-200 cursor-pointer" />
-                                                <input type="text" value={branding.primary_color} onChange={e => setBranding({ ...branding, primary_color: e.target.value })} className="flex-1 px-3 py-2 bg-white border border-slate-300 rounded-lg text-sm font-mono" />
-                                            </div>
-                                        </div>
-                                        <div className="sm:col-span-2 space-y-1.5">
-                                            <label className="text-sm font-medium text-slate-700">Report Footer Text</label>
-                                            <textarea rows={2} value={branding.report_footer_text} onChange={e => setBranding({ ...branding, report_footer_text: e.target.value })} className="w-full px-3 py-2 bg-white border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/20 transition-shadow text-sm resize-none" placeholder="Text shown in PDF report footers..." />
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        )}
-
-                        {/* Integrations Tab */}
-                        {activeTab === 'integrations' && (
-                            <div className="p-6 sm:p-8 animate-in fade-in zoom-in-95 duration-200">
-                                <h2 className="text-lg font-bold text-slate-900 mb-6">Integrations</h2>
-
-                                <div className="space-y-6">
-                                    <div className="border border-slate-200 rounded-xl p-5 bg-slate-50/50">
-                                        <div className="flex items-start justify-between mb-4">
-                                            <div className="flex items-center gap-3">
-                                                <div className="w-10 h-10 bg-white border border-slate-200 rounded-lg flex items-center justify-center">
-                                                    <Mail className="w-5 h-5 text-slate-700" />
-                                                </div>
-                                                <div>
-                                                    <h3 className="font-semibold text-slate-900">SMTP Settings</h3>
-                                                    <p className="text-xs text-slate-500">Configure outbound email delivery</p>
-                                                </div>
-                                            </div>
-                                            <div className="px-2.5 py-1 bg-green-100 text-green-700 border border-green-200 rounded text-xs font-semibold">
-                                                Connected
-                                            </div>
-                                        </div>
-
-                                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                                            <div className="space-y-1.5">
-                                                <label className="text-xs font-medium text-slate-600">SMTP Host</label>
-                                                <input type="text" defaultValue="smtp.sendgrid.net" className="w-full px-3 py-2 bg-white border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-shadow text-sm" />
-                                            </div>
-                                            <div className="space-y-1.5">
-                                                <label className="text-xs font-medium text-slate-600">SMTP Port</label>
-                                                <input type="text" defaultValue="587" className="w-full px-3 py-2 bg-white border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-shadow text-sm" />
-                                            </div>
-                                            <div className="space-y-1.5 sm:col-span-2">
-                                                <label className="text-xs font-medium text-slate-600">SMTP Username</label>
-                                                <input type="text" defaultValue="apikey" className="w-full px-3 py-2 bg-white border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-shadow text-sm" />
-                                            </div>
-                                            <div className="space-y-1.5 sm:col-span-2">
-                                                <label className="text-xs font-medium text-slate-600">SMTP Password</label>
-                                                <input type="password" defaultValue="*************************" className="w-full px-3 py-2 bg-white border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-shadow text-sm" />
-                                            </div>
-                                        </div>
-                                        <div className="mt-4 flex justify-end">
-                                            <button className="text-sm font-medium text-blue-600 hover:text-blue-700 bg-white border border-slate-200 px-3 py-1.5 rounded-lg shadow-sm hover:bg-slate-50 transition-colors">
-                                                Test Connection
-                                            </button>
-                                        </div>
-                                    </div>
-
-                                    <div className="border border-slate-200 rounded-xl p-5 bg-white">
-                                        <div className="flex items-start justify-between">
-                                            <div className="flex items-center gap-3">
-                                                <div className="w-10 h-10 bg-slate-50 border border-slate-200 rounded-lg flex items-center justify-center text-xl font-bold text-slate-400">
-                                                    S
-                                                </div>
-                                                <div>
-                                                    <h3 className="font-semibold text-slate-900">SMS Gateway (Twilio)</h3>
-                                                    <p className="text-xs text-slate-500">Send automated SMS reminders</p>
-                                                </div>
-                                            </div>
-                                            <button className="px-3 py-1.5 bg-white border border-slate-300 text-slate-700 rounded-lg text-sm font-medium hover:bg-slate-50 transition-colors">
-                                                Configure
-                                            </button>
-                                        </div>
-                                    </div>
-
-                                </div>
                             </div>
                         )}
 

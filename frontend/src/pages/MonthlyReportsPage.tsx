@@ -35,7 +35,7 @@ export default function MonthlyReportsPage() {
     const fetchReport = async (month: string) => {
         setLoading(true);
         try {
-            const res = await axios.get(`/api/reports/monthly?month=${month}`);
+            const res = await axios.get(`/api/monthly-reports?month=${month}`);
             setData(res.data);
         } catch (err) {
             console.error('Error fetching report:', err);
@@ -48,7 +48,7 @@ export default function MonthlyReportsPage() {
 
     const handleExport = async () => {
         try {
-            const res = await axios.get(`/api/reports/monthly/export?month=${selectedMonth}`, { responseType: 'blob' });
+            const res = await axios.get(`/api/monthly-reports/export?month=${selectedMonth}`, { responseType: 'blob' });
             const url = window.URL.createObjectURL(new Blob([res.data]));
             const link = document.createElement('a');
             link.href = url;

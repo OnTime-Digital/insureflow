@@ -95,6 +95,49 @@ export const deleteLead = async (req: Request, res: Response) => {
     }
 };
 
+// Bulk delete leads
+export const bulkDeleteLeads = async (req: Request, res: Response) => {
+    try {
+        const { leadIds } = req.body;
+        if (!leadIds || !Array.isArray(leadIds) || leadIds.length === 0) {
+            return res.status(400).json({ error: 'An array of lead IDs is required.' });
+        }
+
+        await prisma.lead.deleteMany({
+            where: {
+                id: { in: leadIds },
+            },
+        });
+
+        res.status(204).send();
+    } catch (error) {
+        console.error('Bulk delete error:', error);
+        res.status(500).json({ error: 'Failed to bulk delete leads' });
+    }
+};
+
+// Bulk update lead status
+export const bulkUpdateLeadStatus = async (req: Request, res: Response) => {
+    try {
+        const { leadIds, status } = req.body;
+        if (!leadIds || !Array.isArray(leadIds) || leadIds.length === 0 || !status) {
+            return res.status(400).json({ error: 'Lead IDs array and status are required.' });
+        }
+
+        await prisma.lead.updateMany({
+            where: {
+                id: { in: leadIds },
+            },
+            data: { status }
+        });
+
+        res.status(200).json({ message: 'Leads status updated successfully' });
+    } catch (error) {
+        console.error('Bulk status update error:', error);
+        res.status(500).json({ error: 'Failed to update leads status' });
+    }
+};
+
 // Get lead activities
 export const getLeadActivities = async (req: Request, res: Response) => {
     try {

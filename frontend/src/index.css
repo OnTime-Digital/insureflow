@@ -5,6 +5,7 @@
   --color-primary: #15244a;
   --color-primary-dark: #0e1832;
   --color-accent: #01b4f3;
+  --font-sans: 'Inter', ui-sans-serif, system-ui, sans-serif;
 }
 
 html {
